@@ -17,7 +17,8 @@ export interface SanityImage {
 export interface SanityVideo {
   _key: string
   title?: string
-  url: string
+  url?: string
+  muxPlaybackId?: string
   aspectRatio?: '16/9' | '9/16' | '4/3' | '1/1'
 }
 

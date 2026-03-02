@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import MuxPlayer from '@mux/mux-player-react';
 import type { SanityVideo } from '../../types/project';
 
 function getYouTubeEmbed(url: string): string | null {
@@ -35,13 +36,8 @@ function NativePlayer({ url, aspectRatio }: { url: string; aspectRatio: string }
 
   const togglePlay = () => {
     if (!videoRef.current) return;
-    if (playing) {
-      videoRef.current.pause();
-      setPlaying(false);
-    } else {
-      videoRef.current.play();
-      setPlaying(true);
-    }
+    if (playing) { videoRef.current.pause(); setPlaying(false); }
+    else { videoRef.current.play(); setPlaying(true); }
   };
 
   const handleTimeUpdate = () => {
@@ -58,9 +54,7 @@ function NativePlayer({ url, aspectRatio }: { url: string; aspectRatio: string }
   const handleMouseMove = () => {
     setShowControls(true);
     clearTimeout(hideTimer.current);
-    if (playing) {
-      hideTimer.current = setTimeout(() => setShowControls(false), 2500);
-    }
+    if (playing) hideTimer.current = setTimeout(() => setShowControls(false), 2500);
   };
 
   return (
@@ -79,79 +73,23 @@ function NativePlayer({ url, aspectRatio }: { url: string; aspectRatio: string }
         playsInline
       />
 
-      {/* Centre — big play quand en pause */}
       {!playing && (
-        <div
-          onClick={togglePlay}
-          style={{
-            position: 'absolute', inset: 0,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer',
-          }}
-        >
-          <div style={{
-            width: '72px', height: '72px', borderRadius: '50%',
-            background: 'rgba(255,255,255,0.12)',
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
-            border: '1px solid rgba(255,255,255,0.28)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transition: 'transform 0.2s ease, background 0.2s ease',
-          }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
-              <polygon points="6,3 20,12 6,21" />
-            </svg>
+        <div onClick={togglePlay} style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><polygon points="6,3 20,12 6,21" /></svg>
           </div>
         </div>
       )}
 
-      {/* Controls bas — glass */}
-      <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0,
-        padding: '2rem 1.25rem 1.25rem',
-        background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%)',
-        transition: 'opacity 0.35s ease',
-        opacity: showControls ? 1 : 0,
-      }}>
-        {/* Progress bar */}
-        <div
-          ref={progressRef}
-          onClick={handleSeek}
-          style={{
-            height: '2px', background: 'rgba(255,255,255,0.2)', borderRadius: '1px',
-            marginBottom: '0.875rem', cursor: 'pointer',
-          }}
-        >
-          <div style={{
-            height: '100%', width: `${progress}%`,
-            background: '#FF5500', borderRadius: '1px',
-            transition: 'width 0.1s linear',
-          }} />
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '2rem 1.25rem 1.25rem', background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%)', transition: 'opacity 0.35s ease', opacity: showControls ? 1 : 0 }}>
+        <div ref={progressRef} onClick={handleSeek} style={{ height: '2px', background: 'rgba(255,255,255,0.2)', borderRadius: '1px', marginBottom: '0.875rem', cursor: 'pointer' }}>
+          <div style={{ height: '100%', width: `${progress}%`, background: '#FF5500', borderRadius: '1px', transition: 'width 0.1s linear' }} />
         </div>
-
-        {/* Bouton play/pause glass */}
-        <button
-          onClick={togglePlay}
-          style={{
-            background: 'rgba(255,255,255,0.12)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.22)',
-            borderRadius: '50%',
-            width: '36px', height: '36px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', color: '#fff',
-          }}
-        >
+        <button onClick={togglePlay} style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.22)', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }}>
           {playing ? (
-            <svg width="12" height="14" viewBox="0 0 12 14" fill="white">
-              <rect x="0" y="0" width="4" height="14" rx="1" />
-              <rect x="8" y="0" width="4" height="14" rx="1" />
-            </svg>
+            <svg width="12" height="14" viewBox="0 0 12 14" fill="white"><rect x="0" y="0" width="4" height="14" rx="1" /><rect x="8" y="0" width="4" height="14" rx="1" /></svg>
           ) : (
-            <svg width="12" height="14" viewBox="0 0 24 24" fill="white">
-              <polygon points="5,2 20,12 5,22" />
-            </svg>
+            <svg width="12" height="14" viewBox="0 0 24 24" fill="white"><polygon points="5,2 20,12 5,22" /></svg>
           )}
         </button>
       </div>
@@ -159,8 +97,28 @@ function NativePlayer({ url, aspectRatio }: { url: string; aspectRatio: string }
   );
 }
 
+function MuxVideoPlayer({ playbackId, aspectRatio, title }: { playbackId: string; aspectRatio: string; title?: string }) {
+  return (
+    <div style={{ aspectRatio, borderRadius: '2px', overflow: 'hidden', background: '#111111' }}>
+      <MuxPlayer
+        playbackId={playbackId}
+        metadata={{ video_title: title }}
+        accentColor="#FF5500"
+        style={{ width: '100%', height: '100%', '--media-object-fit': 'cover' } as React.CSSProperties}
+      />
+    </div>
+  );
+}
+
 export function VideoPlayer({ video }: { video: SanityVideo }) {
   const ratio = video.aspectRatio ?? '16/9';
+
+  if (video.muxPlaybackId) {
+    return <MuxVideoPlayer playbackId={video.muxPlaybackId} aspectRatio={ratio} title={video.title} />;
+  }
+
+  if (!video.url) return null;
+
   const youtube = getYouTubeEmbed(video.url);
   const vimeo = getVimeoEmbed(video.url);
 

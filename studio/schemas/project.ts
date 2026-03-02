@@ -73,10 +73,16 @@ export const projectType = defineType({
               type: 'string',
             },
             {
+              name: 'muxPlaybackId',
+              title: 'Mux Playback ID',
+              type: 'string',
+              description: 'ID de lecture Mux (ex: abc123xyz...). Prioritaire sur l\'URL si renseigné.',
+            },
+            {
               name: 'url',
               title: 'URL (YouTube, Vimeo, ou lien direct MP4)',
               type: 'url',
-              validation: (Rule: { required: () => unknown }) => Rule.required(),
+              description: 'Utilisé seulement si pas de Mux Playback ID.',
             },
             {
               name: 'aspectRatio',
