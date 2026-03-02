@@ -60,6 +60,47 @@ export const projectType = defineType({
       ],
     }),
     defineField({
+      name: 'videos',
+      title: 'Vidéos',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            {
+              name: 'title',
+              title: 'Titre',
+              type: 'string',
+            },
+            {
+              name: 'url',
+              title: 'URL (YouTube, Vimeo, ou lien direct MP4)',
+              type: 'url',
+              validation: (Rule: { required: () => unknown }) => Rule.required(),
+            },
+            {
+              name: 'aspectRatio',
+              title: 'Format',
+              type: 'string',
+              options: {
+                list: [
+                  { title: '16:9 — Paysage', value: '16/9' },
+                  { title: '9:16 — Portrait (mobile)', value: '9/16' },
+                  { title: '4:3 — Classique', value: '4/3' },
+                  { title: '1:1 — Carré', value: '1/1' },
+                ],
+                layout: 'radio',
+              },
+              initialValue: '16/9',
+            },
+          ],
+          preview: {
+            select: { title: 'title', subtitle: 'url' },
+          },
+        },
+      ],
+    }),
+    defineField({
       name: 'description',
       title: 'Description',
       type: 'text',

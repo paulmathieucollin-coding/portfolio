@@ -10,6 +10,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { client, urlFor } from '../../lib/sanity';
 import { projectBySlugQuery } from '../../lib/queries';
 import type { SanityProject } from '../../types/project';
+import { VideoPlayer } from '../components/VideoPlayer';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -189,6 +190,25 @@ export function ProjectDetail() {
                   </p>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Vidéos */}
+          {project.videos && project.videos.length > 0 && (
+            <div className="space-y-6 md:space-y-8 mb-20 md:mb-28">
+              {project.videos.map((video) => (
+                <div key={video._key}>
+                  {video.title && (
+                    <p
+                      className="mb-3"
+                      style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', letterSpacing: '0.1em', color: '#6b6560' }}
+                    >
+                      {video.title.toUpperCase()}
+                    </p>
+                  )}
+                  <VideoPlayer video={video} />
+                </div>
+              ))}
             </div>
           )}
 

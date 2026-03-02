@@ -20,6 +20,7 @@ export const projectBySlugQuery = `
     year,
     mainImage,
     gallery,
+    videos,
     description,
     challenge,
     approach,
