@@ -6,7 +6,7 @@ export function CustomCursor() {
   useEffect(() => {
     const move = (e: MouseEvent) => {
       if (dotRef.current) {
-        dotRef.current.style.transform = `translate(${e.clientX - 2.5}px, ${e.clientY - 2.5}px)`;
+        dotRef.current.style.transform = `translate(${e.clientX - 12.5}px, ${e.clientY - 12.5}px)`;
       }
     };
     window.addEventListener('mousemove', move, { passive: true });
@@ -20,8 +20,8 @@ export function CustomCursor() {
         position: 'fixed',
         top: 0,
         left: 0,
-        width: '5px',
-        height: '5px',
+        width: '25px',
+        height: '25px',
         borderRadius: '50%',
         backgroundColor: '#ffffff',
         mixBlendMode: 'difference',

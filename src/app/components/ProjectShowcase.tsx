@@ -147,7 +147,7 @@ export function ProjectShowcase() {
         <button ref={navPrevRef} onClick={prev}
           onMouseEnter={(e) => { hideCursor(); gsap.to(e.currentTarget.querySelector('.nav-lbl'), { opacity: 1, x: 0, duration: 0.22 }); }}
           onMouseLeave={(e) => { gsap.to(e.currentTarget.querySelector('.nav-lbl'), { opacity: 0, x: -8, duration: 0.18 }); }}
-          style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', width: '12vw', height: '35vh', zIndex: 20, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', paddingLeft: '1.5rem' }}>
+          style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', width: '22vw', height: '60vh', zIndex: 20, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', paddingLeft: '1.5rem' }}>
           <div className="nav-lbl" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.25rem', opacity: 0, transform: 'translateX(-8px)' }}>
             <span style={{ fontSize: '1.1rem', color: '#fff' }}>←</span>
             <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.58rem', letterSpacing: '0.12em', color: 'rgba(255,255,255,0.5)' }}>PREV</span>
@@ -158,7 +158,7 @@ export function ProjectShowcase() {
         <button ref={navNextRef} onClick={next}
           onMouseEnter={(e) => { hideCursor(); gsap.to(e.currentTarget.querySelector('.nav-lbl'), { opacity: 1, x: 0, duration: 0.22 }); }}
           onMouseLeave={(e) => { gsap.to(e.currentTarget.querySelector('.nav-lbl'), { opacity: 0, x: 8, duration: 0.18 }); }}
-          style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', width: '12vw', height: '35vh', zIndex: 20, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '1.5rem' }}>
+          style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', width: '22vw', height: '60vh', zIndex: 20, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '1.5rem' }}>
           <div className="nav-lbl" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem', opacity: 0, transform: 'translateX(8px)' }}>
             <span style={{ fontSize: '1.1rem', color: '#fff' }}>→</span>
             <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.58rem', letterSpacing: '0.12em', color: 'rgba(255,255,255,0.5)' }}>NEXT</span>
