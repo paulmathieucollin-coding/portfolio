@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router';
 
 export function CookieBanner() {
   const [visible, setVisible] = useState(false);
@@ -41,9 +40,9 @@ export function CookieBanner() {
 
       <p style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.45)', fontFamily: 'GeistMono, monospace', letterSpacing: '0.02em', margin: 0 }}>
         Ce site utilise des cookies techniques uniquement.{' '}
-        <Link to="/mentions-legales" style={{ color: 'rgba(255,255,255,0.3)', textDecoration: 'underline', textUnderlineOffset: '2px' }}>
+        <a href="/mentions-legales" style={{ color: 'rgba(255,255,255,0.3)', textDecoration: 'underline', textUnderlineOffset: '2px' }}>
           En savoir plus
-        </Link>
+        </a>
       </p>
 
       <div style={{ display: 'flex', gap: '0.6rem', flexShrink: 0 }}>

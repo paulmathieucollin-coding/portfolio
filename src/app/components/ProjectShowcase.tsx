@@ -71,8 +71,9 @@ export function ProjectShowcase() {
   const headerRef    = useRef<HTMLElement>(null);
   const navPrevRef   = useRef<HTMLButtonElement>(null);
   const navNextRef   = useRef<HTMLButtonElement>(null);
-  const indexRef     = useRef<HTMLDivElement>(null);
-  const indexAnimRef = useRef(false);
+  const indexRef          = useRef<HTMLDivElement>(null);
+  const indexAnimRef      = useRef(false);
+  const pendingIndexAnim  = useRef(false);
 
   useEffect(() => {
     client.fetch<SanityProject[]>(projectsQuery).then((data) => setProjects(data ?? []));
@@ -135,16 +136,21 @@ export function ProjectShowcase() {
   const openIndex = useCallback(() => {
     if (indexAnimRef.current) return;
     indexAnimRef.current = true;
+    pendingIndexAnim.current = true;
     setView('index');
-    requestAnimationFrame(() => {
-      if (indexRef.current) {
-        gsap.fromTo(indexRef.current, { yPercent: 100 }, {
-          yPercent: 0, duration: 0.65, ease: 'power4.out',
-          onComplete: () => { indexAnimRef.current = false; }
-        });
-      } else { indexAnimRef.current = false; }
-    });
   }, []);
+
+  // ── Anime l'entrée du panel Index après que React l'a rendu ──
+  useEffect(() => {
+    if (view !== 'index' || !pendingIndexAnim.current) return;
+    pendingIndexAnim.current = false;
+    if (!indexRef.current) { indexAnimRef.current = false; return; }
+    gsap.set(indexRef.current, { yPercent: 100 });
+    gsap.to(indexRef.current, {
+      yPercent: 0, duration: 0.65, ease: 'power4.out',
+      onComplete: () => { indexAnimRef.current = false; },
+    });
+  }, [view]);
 
   const closeIndex = useCallback(() => {
     if (!indexRef.current || indexAnimRef.current) return;
