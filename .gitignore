@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+studio/node_modules/
+
+# Build output
+dist/
+studio/dist/
+
+# Environment variables (sensitive)
+.env
+.env.local
+.env.production
+
+# Cache
+.cache/
+.vite/
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
