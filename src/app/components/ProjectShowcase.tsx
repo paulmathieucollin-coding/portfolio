@@ -85,6 +85,14 @@ export function ProjectShowcase() {
     client.fetch<SanityProject[]>(projectsQuery).then((data) => setProjects(data ?? []));
   }, []);
 
+  // ── Rétablir le curseur principal quand on quitte la homepage ──
+  useEffect(() => {
+    return () => {
+      const main = document.getElementById('main-cursor');
+      if (main) main.style.opacity = '1';
+    };
+  }, []);
+
   // ── Entrance animation ──
   useEffect(() => {
     if (!projects.length || ready) return;
