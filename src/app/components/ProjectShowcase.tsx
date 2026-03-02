@@ -52,8 +52,14 @@ function CustomLabel() {
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');
-const showCursor = () => { const el = document.getElementById('showcase-cursor'); if (el) el.style.opacity = '1'; };
-const hideCursor = () => { const el = document.getElementById('showcase-cursor'); if (el) el.style.opacity = '0'; };
+const showCursor = () => {
+  const el = document.getElementById('showcase-cursor'); if (el) el.style.opacity = '1';
+  const main = document.getElementById('main-cursor'); if (main) main.style.opacity = '0';
+};
+const hideCursor = () => {
+  const el = document.getElementById('showcase-cursor'); if (el) el.style.opacity = '0';
+  const main = document.getElementById('main-cursor'); if (main) main.style.opacity = '1';
+};
 
 export function ProjectShowcase() {
   const navigate = useNavigate();
@@ -234,44 +240,52 @@ export function ProjectShowcase() {
 
         {/* Scroll hint */}
         {view === 'featured' && ready && (
-          <div style={{ position: 'absolute', bottom: '1.5rem', left: '50%', transform: 'translateX(-50%)', zIndex: 25, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem', opacity: 0.35, pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', bottom: '3.5rem', left: '50%', transform: 'translateX(-50%)', zIndex: 36, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem', opacity: 0.35, pointerEvents: 'none' }}>
             <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.55rem', letterSpacing: '0.12em', color: '#fff' }}>SCROLL</span>
             <span style={{ fontSize: '0.7rem', color: '#fff' }}>↓</span>
           </div>
         )}
 
-        {/* Footer — numéro + titre */}
+        {/* Titre + numéro — masqué par l'overlay index (zIndex 25 < 30) */}
         {project && (
-          <footer style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 25, padding: '0 1.5rem 3rem', color: '#fff' }}>
+          <div style={{ position: 'absolute', bottom: '3rem', left: 0, right: 0, zIndex: 25, padding: '0 1.5rem', color: '#fff' }}>
             <p ref={numRef} style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.4)', marginBottom: '0.5rem' }}>
               ({pad(current + 1)}/{pad(projects.length)})
             </p>
             <div style={{ overflow: 'hidden' }}>
               <h2 ref={titleRef} onMouseEnter={showCursor} onMouseLeave={hideCursor}
                 onClick={() => navigate(`/project/${project.slug.current}`)}
-                style={{ fontSize: 'clamp(3rem, 8.5vw, 8.5rem)', fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 0.88, cursor: 'none', marginBottom: '1.25rem', display: 'block' }}>
+                style={{ fontSize: 'clamp(3rem, 8.5vw, 8.5rem)', fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 0.88, cursor: 'none', marginBottom: 0, display: 'block' }}>
                 {project.title}
               </h2>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-                <button onClick={prev} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '0.7rem', letterSpacing: '0.06em', cursor: 'pointer', padding: 0, fontFamily: 'GeistMono, monospace' }}>[←] Prev</button>
-                <span ref={urlLabelRef} style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.22)', fontFamily: 'GeistMono, monospace' }}>paulmathieucollin.fr/project/{project.slug.current}</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.7rem', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.4)', fontFamily: 'GeistMono, monospace' }}>Instagram</a>
-                <button onClick={next} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '0.7rem', letterSpacing: '0.06em', cursor: 'pointer', padding: 0, fontFamily: 'GeistMono, monospace' }}>Next [→]</button>
-              </div>
-            </div>
-          </footer>
+          </div>
         )}
+
+        {/* Barre de navigation persistante — toujours visible (zIndex 35 > 30) */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 35, padding: '0 1.5rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+            <button onClick={prev} style={{ background: 'none', border: 'none', color: view === 'index' ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.4)', fontSize: '0.7rem', letterSpacing: '0.06em', cursor: 'pointer', padding: 0, fontFamily: 'GeistMono, monospace', transition: 'color 0.35s' }}>[←] Prev</button>
+            {project && <span ref={urlLabelRef} style={{ fontSize: '0.62rem', color: view === 'index' ? 'rgba(0,0,0,0.22)' : 'rgba(255,255,255,0.22)', fontFamily: 'GeistMono, monospace', transition: 'color 0.35s' }}>paulmathieucollin.fr/project/{project.slug.current}</span>}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+            <a href="/mentions-legales" style={{ fontSize: '0.7rem', letterSpacing: '0.06em', color: view === 'index' ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.4)', fontFamily: 'GeistMono, monospace', transition: 'color 0.35s' }}>Mentions légales</a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.7rem', letterSpacing: '0.06em', color: view === 'index' ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.4)', fontFamily: 'GeistMono, monospace', transition: 'color 0.35s' }}>Instagram</a>
+            <button onClick={next} style={{ background: 'none', border: 'none', color: view === 'index' ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.4)', fontSize: '0.7rem', letterSpacing: '0.06em', cursor: 'pointer', padding: 0, fontFamily: 'GeistMono, monospace', transition: 'color 0.35s' }}>Next [→]</button>
+          </div>
+        </div>
 
         {/* ── Index overlay — animé ── */}
         {view === 'index' && (
           <div
             ref={indexRef}
-            onWheel={(e) => { if (indexRef.current?.scrollTop === 0 && e.deltaY < 0) closeIndex(); }}
-            style={{ position: 'absolute', inset: 0, zIndex: 30, background: '#f8f4ee', overflowY: 'auto', padding: '5rem 1.5rem 3rem', willChange: 'transform' }}
+            onWheel={(e) => {
+              const el = indexRef.current;
+              if (!el) return;
+              if (el.scrollTop === 0 && e.deltaY < -20) closeIndex();
+              if (el.scrollTop + el.clientHeight >= el.scrollHeight - 20 && e.deltaY > 40) closeIndex();
+            }}
+            style={{ position: 'absolute', inset: 0, zIndex: 30, background: '#f8f4ee', overflowY: 'auto', padding: '5rem 1.5rem 5rem', willChange: 'transform' }}
           >
             <button onClick={closeIndex} style={{ position: 'fixed', top: '1.25rem', left: '1.5rem', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', color: '#111' }}>PMC</button>
             <button onClick={closeIndex} style={{ position: 'fixed', top: '1.25rem', right: '1.5rem', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', color: 'rgba(0,0,0,0.4)' }}>↑ Featured</button>

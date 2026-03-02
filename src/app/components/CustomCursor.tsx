@@ -15,6 +15,7 @@ export function CustomCursor() {
 
   return (
     <div
+      id="main-cursor"
       ref={dotRef}
       style={{
         position: 'fixed',
