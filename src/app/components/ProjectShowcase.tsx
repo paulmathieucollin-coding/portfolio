@@ -64,19 +64,21 @@ export function ProjectShowcase() {
   const transitioning = useRef(false);
   const time = useClock();
 
-  const curtainRef  = useRef<HTMLDivElement>(null);
-  const titleRef    = useRef<HTMLHeadingElement>(null);
-  const numRef      = useRef<HTMLParagraphElement>(null);
-  const urlLabelRef = useRef<HTMLSpanElement>(null);
-  const headerRef   = useRef<HTMLElement>(null);
-  const navPrevRef  = useRef<HTMLButtonElement>(null);
-  const navNextRef  = useRef<HTMLButtonElement>(null);
+  const curtainRef   = useRef<HTMLDivElement>(null);
+  const titleRef     = useRef<HTMLHeadingElement>(null);
+  const numRef       = useRef<HTMLParagraphElement>(null);
+  const urlLabelRef  = useRef<HTMLSpanElement>(null);
+  const headerRef    = useRef<HTMLElement>(null);
+  const navPrevRef   = useRef<HTMLButtonElement>(null);
+  const navNextRef   = useRef<HTMLButtonElement>(null);
+  const indexRef     = useRef<HTMLDivElement>(null);
+  const indexAnimRef = useRef(false);
 
   useEffect(() => {
     client.fetch<SanityProject[]>(projectsQuery).then((data) => setProjects(data ?? []));
   }, []);
 
-  // Entrance animation
+  // ── Entrance animation ──
   useEffect(() => {
     if (!projects.length || ready) return;
     setReady(true);
@@ -90,7 +92,7 @@ export function ProjectShowcase() {
       .from([navPrevRef.current, navNextRef.current], { opacity: 0, duration: 0.5, stagger: 0.06 }, '-=0.5');
   }, [projects.length, ready]);
 
-  // Transition between slides — curtain wipe
+  // ── Slide transition ──
   const goTo = useCallback((index: number) => {
     if (transitioning.current || !projects.length) return;
     transitioning.current = true;
@@ -109,11 +111,49 @@ export function ProjectShowcase() {
   const prev = useCallback(() => goTo((current - 1 + projects.length) % projects.length), [current, projects.length, goTo]);
   const next = useCallback(() => goTo((current + 1) % projects.length), [current, projects.length, goTo]);
 
+  // ── Keyboard nav ──
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (view !== 'featured') return; if (e.key === 'ArrowLeft') prev(); if (e.key === 'ArrowRight') next(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (view !== 'featured') return;
+      if (e.key === 'ArrowLeft') prev();
+      if (e.key === 'ArrowRight') next();
+    };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [prev, next, view]);
+
+  // ── Scroll down → Index, scroll up (at top) → Featured ──
+  useEffect(() => {
+    if (view !== 'featured') return;
+    const onWheel = (e: WheelEvent) => {
+      if (e.deltaY > 40 && !indexAnimRef.current) openIndex();
+    };
+    window.addEventListener('wheel', onWheel, { passive: true });
+    return () => window.removeEventListener('wheel', onWheel);
+  }, [view]);
+
+  const openIndex = useCallback(() => {
+    if (indexAnimRef.current) return;
+    indexAnimRef.current = true;
+    setView('index');
+    requestAnimationFrame(() => {
+      if (indexRef.current) {
+        gsap.fromTo(indexRef.current, { yPercent: 100 }, {
+          yPercent: 0, duration: 0.65, ease: 'power4.out',
+          onComplete: () => { indexAnimRef.current = false; }
+        });
+      } else { indexAnimRef.current = false; }
+    });
+  }, []);
+
+  const closeIndex = useCallback(() => {
+    if (!indexRef.current || indexAnimRef.current) return;
+    indexAnimRef.current = true;
+    gsap.to(indexRef.current, {
+      yPercent: 100, duration: 0.5, ease: 'power3.in',
+      onComplete: () => { setView('featured'); indexAnimRef.current = false; }
+    });
+  }, []);
 
   const project = projects[current];
 
@@ -143,7 +183,7 @@ export function ProjectShowcase() {
             style={{ position: 'absolute', top: '10%', left: '14%', right: '14%', bottom: '22%', zIndex: 15, cursor: 'none' }} />
         )}
 
-        {/* Prev — zone gauche */}
+        {/* Prev */}
         <button ref={navPrevRef} onClick={prev}
           onMouseEnter={(e) => { hideCursor(); gsap.to(e.currentTarget.querySelector('.nav-lbl'), { opacity: 1, x: 0, duration: 0.22 }); }}
           onMouseLeave={(e) => { gsap.to(e.currentTarget.querySelector('.nav-lbl'), { opacity: 0, x: -8, duration: 0.18 }); }}
@@ -154,7 +194,7 @@ export function ProjectShowcase() {
           </div>
         </button>
 
-        {/* Next — zone droite */}
+        {/* Next */}
         <button ref={navNextRef} onClick={next}
           onMouseEnter={(e) => { hideCursor(); gsap.to(e.currentTarget.querySelector('.nav-lbl'), { opacity: 1, x: 0, duration: 0.22 }); }}
           onMouseLeave={(e) => { gsap.to(e.currentTarget.querySelector('.nav-lbl'), { opacity: 0, x: 8, duration: 0.18 }); }}
@@ -170,7 +210,7 @@ export function ProjectShowcase() {
           <div>
             <Link to="/" style={{ display: 'block', fontFamily: 'GeistMono, monospace', fontSize: '1rem', fontWeight: 700, color: '#fff', marginBottom: '0.35rem' }}>PMC</Link>
             <button onClick={() => setView('featured')} style={{ display: 'block', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', letterSpacing: '0.05em', color: view === 'featured' ? '#fff' : 'rgba(255,255,255,0.35)', lineHeight: 1.8 }}>Featured ({pad(projects.length)})</button>
-            <button onClick={() => setView('index')} style={{ display: 'block', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', letterSpacing: '0.05em', color: view === 'index' ? '#fff' : 'rgba(255,255,255,0.35)', lineHeight: 1.8 }}>Index ({pad(projects.length)})</button>
+            <button onClick={openIndex} style={{ display: 'block', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', letterSpacing: '0.05em', color: view === 'index' ? '#fff' : 'rgba(255,255,255,0.35)', lineHeight: 1.8 }}>Index ({pad(projects.length)})</button>
           </div>
           <div style={{ fontSize: '0.7rem', letterSpacing: '0.04em', color: 'rgba(255,255,255,0.6)', lineHeight: 1.9 }}>
             <Link to="/contact" style={{ display: 'block', color: 'inherit' }}>Contact</Link>
@@ -186,15 +226,22 @@ export function ProjectShowcase() {
           </div>
         </header>
 
+        {/* Scroll hint */}
+        {view === 'featured' && ready && (
+          <div style={{ position: 'absolute', bottom: '1.5rem', left: '50%', transform: 'translateX(-50%)', zIndex: 25, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem', opacity: 0.35, pointerEvents: 'none' }}>
+            <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.55rem', letterSpacing: '0.12em', color: '#fff' }}>SCROLL</span>
+            <span style={{ fontSize: '0.7rem', color: '#fff' }}>↓</span>
+          </div>
+        )}
+
         {/* Footer — numéro + titre */}
         {project && (
-          <footer style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 25, padding: '0 1.5rem 1.5rem', color: '#fff' }}>
+          <footer style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 25, padding: '0 1.5rem 3rem', color: '#fff' }}>
             <p ref={numRef} style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.4)', marginBottom: '0.5rem' }}>
               ({pad(current + 1)}/{pad(projects.length)})
             </p>
             <div style={{ overflow: 'hidden' }}>
-              <h2 ref={titleRef}
-                onMouseEnter={showCursor} onMouseLeave={hideCursor}
+              <h2 ref={titleRef} onMouseEnter={showCursor} onMouseLeave={hideCursor}
                 onClick={() => navigate(`/project/${project.slug.current}`)}
                 style={{ fontSize: 'clamp(3rem, 8.5vw, 8.5rem)', fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 0.88, cursor: 'none', marginBottom: '1.25rem', display: 'block' }}>
                 {project.title}
@@ -213,11 +260,16 @@ export function ProjectShowcase() {
           </footer>
         )}
 
-        {/* Index overlay */}
+        {/* ── Index overlay — animé ── */}
         {view === 'index' && (
-          <div style={{ position: 'absolute', inset: 0, zIndex: 30, background: '#f8f4ee', overflowY: 'auto', padding: '5rem 1.5rem 3rem' }}>
-            <button onClick={() => setView('featured')} style={{ position: 'fixed', top: '1.25rem', left: '1.5rem', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', color: '#111' }}>PMC</button>
-            <button onClick={() => setView('featured')} style={{ position: 'fixed', top: '1.25rem', right: '1.5rem', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', color: 'rgba(0,0,0,0.4)' }}>← Featured</button>
+          <div
+            ref={indexRef}
+            onWheel={(e) => { if (indexRef.current?.scrollTop === 0 && e.deltaY < 0) closeIndex(); }}
+            style={{ position: 'absolute', inset: 0, zIndex: 30, background: '#f8f4ee', overflowY: 'auto', padding: '5rem 1.5rem 3rem', willChange: 'transform' }}
+          >
+            <button onClick={closeIndex} style={{ position: 'fixed', top: '1.25rem', left: '1.5rem', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', color: '#111' }}>PMC</button>
+            <button onClick={closeIndex} style={{ position: 'fixed', top: '1.25rem', right: '1.5rem', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', color: 'rgba(0,0,0,0.4)' }}>↑ Featured</button>
+
             <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
               <div style={{ borderBottom: '1px solid rgba(0,0,0,0.1)', paddingBottom: '0.75rem', marginBottom: '0.5rem', display: 'grid', gridTemplateColumns: '3rem 1fr 8rem 6rem', gap: '1rem' }}>
                 {['#', 'Projet', 'Catégorie', 'Année'].map(h => <span key={h} style={{ fontSize: '0.6rem', letterSpacing: '0.1em', color: '#999', fontFamily: 'GeistMono, monospace' }}>{h}</span>)}

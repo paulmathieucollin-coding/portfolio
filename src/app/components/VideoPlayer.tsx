@@ -102,8 +102,10 @@ function MuxVideoPlayer({ playbackId, aspectRatio, title }: { playbackId: string
     <div style={{ aspectRatio, borderRadius: '2px', overflow: 'hidden', background: '#111111' }}>
       <MuxPlayer
         playbackId={playbackId}
-        metadata={{ video_title: title }}
+        streamType="on-demand"
+        metadata={{ video_title: title ?? 'Vidéo' }}
         accentColor="#FF5500"
+        defaultHiddenCaptions
         style={{ width: '100%', height: '100%', '--media-object-fit': 'cover' } as React.CSSProperties}
       />
     </div>
