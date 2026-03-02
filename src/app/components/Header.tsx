@@ -49,7 +49,7 @@ export function Header() {
             ref={logoRef}
             to="/"
             style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', letterSpacing: '0.08em' }}
-            className="tracking-tight transition-colors duration-300 hover:text-[#0000FF] uppercase"
+            className="tracking-tight transition-colors duration-300 hover:text-[#FF5500] uppercase"
           >
             Paul Mathieu Collin
           </Link>
@@ -63,11 +63,11 @@ export function Header() {
                 key={path}
                 to={path}
                 className="relative transition-colors duration-300 uppercase"
-                style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', letterSpacing: '0.08em', color: isActive(path) ? '#0000FF' : 'inherit' }}
+                style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', letterSpacing: '0.08em', color: isActive(path) ? '#FF5500' : 'inherit' }}
               >
                 {label}
                 <span
-                  className="absolute left-0 -bottom-0.5 h-px bg-[#0000FF] transition-all duration-400"
+                  className="absolute left-0 -bottom-0.5 h-px bg-[#FF5500] transition-all duration-400"
                   style={{ width: isActive(path) ? '100%' : '0%' }}
                 />
               </Link>

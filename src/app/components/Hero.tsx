@@ -102,7 +102,7 @@ export function Hero() {
                 letterSpacing: '-0.03em',
               }}
             >
-              <span className="text-[#0000FF]">Director</span>
+              <span className="text-[#FF5500]">Director</span>
             </h1>
           </div>
         </div>

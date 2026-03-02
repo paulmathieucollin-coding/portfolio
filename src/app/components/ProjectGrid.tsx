@@ -22,10 +22,15 @@ export function ProjectGrid() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    client.fetch<SanityProject[]>(projectsQuery).then((data) => {
-      setProjects(data);
-      setLoading(false);
-    });
+    client.fetch<SanityProject[]>(projectsQuery)
+      .then((data) => {
+        setProjects(data ?? []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Sanity fetch error:', err);
+        setLoading(false);
+      });
   }, []);
 
   const filtered =
@@ -122,8 +127,8 @@ export function ProjectGrid() {
                 letterSpacing: '0.04em',
                 borderRadius: '2px',
                 border: '1px solid',
-                borderColor: activeFilter === cat ? '#0000FF' : 'rgba(0,0,0,0.15)',
-                backgroundColor: activeFilter === cat ? '#0000FF' : 'transparent',
+                borderColor: activeFilter === cat ? '#FF5500' : 'rgba(0,0,0,0.15)',
+                backgroundColor: activeFilter === cat ? '#FF5500' : 'transparent',
                 color: activeFilter === cat ? '#ffffff' : '#666666',
                 cursor: 'pointer',
               }}
@@ -202,7 +207,7 @@ export function ProjectGrid() {
                 {/* Meta */}
                 <div className="flex justify-between items-baseline">
                   <h3
-                    className="tracking-tight transition-colors duration-300 group-hover:text-[#0000FF]"
+                    className="tracking-tight transition-colors duration-300 group-hover:text-[#FF5500]"
                     style={{ fontSize: '1.0625rem', fontWeight: 600 }}
                   >
                     {project.title}

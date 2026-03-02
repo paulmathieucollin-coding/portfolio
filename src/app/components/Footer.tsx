@@ -31,7 +31,7 @@ export function Footer() {
                 <a
                   key={label}
                   href={href}
-                  className="block text-gray-600 hover:text-[#0000FF] transition-colors duration-300"
+                  className="block text-gray-600 hover:text-[#FF5500] transition-colors duration-300"
                   style={{ fontSize: '0.85rem' }}
                 >
                   {label}
@@ -49,7 +49,7 @@ export function Footer() {
             </p>
             <a
               href="mailto:hello@paulmathieucollin.com"
-              className="block text-gray-600 hover:text-[#0000FF] transition-colors duration-300"
+              className="block text-gray-600 hover:text-[#FF5500] transition-colors duration-300"
               style={{ fontSize: '0.85rem' }}
             >
               hello@paulmathieucollin.com

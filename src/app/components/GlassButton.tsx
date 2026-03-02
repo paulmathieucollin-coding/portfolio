@@ -40,10 +40,10 @@ export function GlassButton({
   const style = {
     backdropFilter: 'blur(20px)',
     WebkitBackdropFilter: 'blur(20px)',
-    backgroundColor: isBlack ? 'rgba(0, 0, 0, 0.88)' : 'rgba(255, 255, 255, 0.8)',
-    color: isBlack ? '#ffffff' : '#000000',
+    backgroundColor: isBlack ? '#FF5500' : 'rgba(255, 255, 255, 0.8)',
+    color: isBlack ? '#ffffff' : '#111111',
     border: isBlack
-      ? '1px solid rgba(255, 255, 255, 0.08)'
+      ? '1px solid rgba(255, 85, 0, 0.2)'
       : '1px solid rgba(0, 0, 0, 0.12)',
     borderRadius: '2px',
     padding: '0.75rem 2rem',
