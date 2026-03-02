@@ -1,3 +1,5 @@
+import { Link } from 'react-router';
+
 export function Footer() {
   return (
     <footer
@@ -63,9 +65,13 @@ export function Footer() {
         <p className="text-gray-400" style={{ fontSize: '0.75rem' }}>
           © 2026 Paul Mathieu Collin
         </p>
-        <p className="text-gray-300" style={{ fontSize: '0.75rem' }}>
-          Built with precision
-        </p>
+        <Link
+          to="/mentions-legales"
+          className="text-gray-300 hover:text-[#FF5500] transition-colors duration-300"
+          style={{ fontSize: '0.75rem' }}
+        >
+          Mentions légales
+        </Link>
       </div>
     </footer>
   );
