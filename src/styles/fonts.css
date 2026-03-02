@@ -1,1 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Space+Mono:wght@400;700&family=Arimo:wght@400;500;600;700&display=swap');
+@font-face {
+  font-family: 'GeistSans';
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  src: url('../../node_modules/geist/dist/fonts/geist-sans/Geist-Variable.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'GeistMono';
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  src: url('../../node_modules/geist/dist/fonts/geist-mono/GeistMono-Variable.woff2') format('woff2');
+}

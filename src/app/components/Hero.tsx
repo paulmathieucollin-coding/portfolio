@@ -81,9 +81,8 @@ export function Hero() {
               className="leading-[0.92] tracking-tight"
               style={{
                 fontSize: 'clamp(4rem, 10vw, 10rem)',
-                fontWeight: 400,
-                fontFamily: 'var(--font-serif)',
-                letterSpacing: '-0.01em',
+                fontWeight: 600,
+                letterSpacing: '-0.03em',
               }}
             >
               Visual
@@ -99,9 +98,8 @@ export function Hero() {
               className="leading-[0.92] tracking-tight"
               style={{
                 fontSize: 'clamp(4rem, 10vw, 10rem)',
-                fontWeight: 400,
-                fontFamily: 'var(--font-serif)',
-                letterSpacing: '-0.01em',
+                fontWeight: 600,
+                letterSpacing: '-0.03em',
               }}
             >
               <span className="text-[#0000FF]">Director</span>

@@ -2,9 +2,9 @@
 
 :root {
   --font-size: 16px;
-  --font-family: 'Arimo', sans-serif;
-  --font-serif: 'EB Garamond', Georgia, serif;
-  --font-mono: 'Space Mono', 'Courier New', monospace;
+  --font-family: 'GeistSans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'GeistSans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'GeistMono', 'Courier New', monospace;
   --bauhaus-blue: #0000FF;
   --background: #f4f3ef;
   --foreground: #1a1a18;
