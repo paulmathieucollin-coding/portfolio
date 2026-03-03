@@ -70,16 +70,16 @@ export function ProjectShowcase() {
   const transitioning = useRef(false);
   const time = useClock();
 
-  const curtainRef   = useRef<HTMLDivElement>(null);
-  const titleRef     = useRef<HTMLHeadingElement>(null);
-  const numRef       = useRef<HTMLParagraphElement>(null);
-  const urlLabelRef  = useRef<HTMLSpanElement>(null);
-  const headerRef    = useRef<HTMLElement>(null);
-  const navPrevRef   = useRef<HTMLButtonElement>(null);
-  const navNextRef   = useRef<HTMLButtonElement>(null);
-  const indexRef          = useRef<HTMLDivElement>(null);
-  const indexAnimRef      = useRef(false);
-  const pendingIndexAnim  = useRef(false);
+  const curtainRef      = useRef<HTMLDivElement>(null);
+  const titleRef        = useRef<HTMLHeadingElement>(null);
+  const numRef          = useRef<HTMLParagraphElement>(null);
+  const urlLabelRef     = useRef<HTMLSpanElement>(null);
+  const headerRef       = useRef<HTMLElement>(null);
+  const navPrevRef      = useRef<HTMLButtonElement>(null);
+  const navNextRef      = useRef<HTMLButtonElement>(null);
+  const indexRef        = useRef<HTMLDivElement>(null);
+  const indexAnimRef    = useRef(false);
+  const glassOverlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     client.fetch<SanityProject[]>(projectsQuery).then((data) => setProjects(data ?? []));
@@ -91,6 +91,11 @@ export function ProjectShowcase() {
       const main = document.getElementById('main-cursor');
       if (main) main.style.opacity = '1';
     };
+  }, []);
+
+  // ── Init panel en bas au montage ──
+  useEffect(() => {
+    if (indexRef.current) gsap.set(indexRef.current, { yPercent: 100 });
   }, []);
 
   // ── Entrance animation ──
@@ -107,7 +112,7 @@ export function ProjectShowcase() {
       .from([navPrevRef.current, navNextRef.current], { opacity: 0, duration: 0.5, stagger: 0.06 }, '-=0.5');
   }, [projects.length, ready]);
 
-  // ── Slide transition ──
+  // ── Slide transition entre projets ──
   const goTo = useCallback((index: number) => {
     if (transitioning.current || !projects.length) return;
     transitioning.current = true;
@@ -137,42 +142,83 @@ export function ProjectShowcase() {
     return () => window.removeEventListener('keydown', onKey);
   }, [prev, next, view]);
 
-  // ── Scroll down → Index, scroll up (at top) → Featured ──
-  useEffect(() => {
-    if (view !== 'featured') return;
-    const onWheel = (e: WheelEvent) => {
-      if (e.deltaY > 40 && !indexAnimRef.current) openIndex();
-    };
-    window.addEventListener('wheel', onWheel, { passive: true });
-    return () => window.removeEventListener('wheel', onWheel);
-  }, [view]);
-
-  const openIndex = useCallback(() => {
+  // ── Liquid glass open ──
+  const triggerLiquidOpen = useCallback(() => {
     if (indexAnimRef.current) return;
     indexAnimRef.current = true;
-    pendingIndexAnim.current = true;
-    setView('index');
+    const panel = indexRef.current;
+    const glass = glassOverlayRef.current;
+    if (!panel) { indexAnimRef.current = false; return; }
+
+    const tl = gsap.timeline({
+      onComplete: () => { setView('index'); indexAnimRef.current = false; }
+    });
+    // Flash glass overlay
+    if (glass) tl.to(glass, { opacity: 0.72, duration: 0.13, ease: 'power2.in' });
+    // Panel monte avec blur — effet verre liquide
+    tl.set(panel, { filter: 'blur(22px)' }, '<');
+    tl.to(panel, { yPercent: 0, duration: 0.6, ease: 'power4.out' }, '<');
+    // Overlay disparaît, blur se dissipe
+    if (glass) tl.to(glass, { opacity: 0, duration: 0.45 }, '>-0.15');
+    tl.to(panel, { filter: 'blur(0px)', duration: 0.55, ease: 'power2.out' }, '<');
   }, []);
 
-  // ── Anime l'entrée du panel Index après que React l'a rendu ──
+  // ── Scroll scrub featured → index ──
   useEffect(() => {
-    if (view !== 'index' || !pendingIndexAnim.current) return;
-    pendingIndexAnim.current = false;
-    if (!indexRef.current) { indexAnimRef.current = false; return; }
-    gsap.set(indexRef.current, { yPercent: 100 });
-    gsap.to(indexRef.current, {
-      yPercent: 0, duration: 0.65, ease: 'power4.out',
-      onComplete: () => { indexAnimRef.current = false; },
-    });
-  }, [view]);
+    if (view !== 'featured') return;
+    // Remettre le panel en bas
+    if (indexRef.current) gsap.set(indexRef.current, { yPercent: 100, filter: 'blur(0px)' });
 
+    let scrollAcc = 0;
+    let snapping = false;
+    const THRESHOLD = 260;
+
+    const onWheel = (e: WheelEvent) => {
+      if (snapping || indexAnimRef.current) return;
+      const prevAcc = scrollAcc;
+      scrollAcc = Math.max(0, scrollAcc + e.deltaY);
+      const progress = Math.min(scrollAcc / THRESHOLD, 1);
+      if (!indexRef.current) return;
+
+      if (progress < 1) {
+        // Peek progressif depuis le bas (max ~28%)
+        gsap.set(indexRef.current, { yPercent: 100 - progress * 28 });
+        // Rétraction si l'utilisateur remonte
+        if (scrollAcc === 0 && prevAcc > 0) {
+          gsap.to(indexRef.current, { yPercent: 100, duration: 0.35, ease: 'power2.out' });
+        }
+      } else {
+        snapping = true;
+        triggerLiquidOpen();
+      }
+    };
+
+    window.addEventListener('wheel', onWheel, { passive: true });
+    return () => window.removeEventListener('wheel', onWheel);
+  }, [view, triggerLiquidOpen]);
+
+  // ── Open index (bouton header) ──
+  const openIndex = useCallback(() => {
+    if (indexAnimRef.current) return;
+    if (indexRef.current) gsap.set(indexRef.current, { yPercent: 100, filter: 'blur(0px)' });
+    triggerLiquidOpen();
+  }, [triggerLiquidOpen]);
+
+  // ── Close index avec glass ──
   const closeIndex = useCallback(() => {
     if (!indexRef.current || indexAnimRef.current) return;
     indexAnimRef.current = true;
-    gsap.to(indexRef.current, {
-      yPercent: 100, duration: 0.5, ease: 'power3.in',
+    const panel = indexRef.current;
+    const glass = glassOverlayRef.current;
+
+    const tl = gsap.timeline({
       onComplete: () => { setView('featured'); indexAnimRef.current = false; }
     });
+    tl.to(panel, { filter: 'blur(16px)', duration: 0.15, ease: 'power2.in' });
+    if (glass) tl.to(glass, { opacity: 0.5, duration: 0.15 }, '<');
+    tl.to(panel, { yPercent: 100, duration: 0.48, ease: 'power3.in' }, '>');
+    if (glass) tl.to(glass, { opacity: 0, duration: 0.3 }, '<0.1');
+    tl.set(panel, { filter: 'blur(0px)' });
   }, []);
 
   const project = projects[current];
@@ -229,7 +275,7 @@ export function ProjectShowcase() {
         <header ref={headerRef} style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 25, padding: '1.25rem 1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', alignItems: 'start', color: '#fff' }}>
           <div>
             <Link to="/" style={{ display: 'block', fontFamily: 'GeistMono, monospace', fontSize: '1rem', fontWeight: 700, color: '#fff', marginBottom: '0.35rem' }}>PMC</Link>
-            <button onClick={() => setView('featured')} style={{ display: 'block', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', letterSpacing: '0.05em', color: view === 'featured' ? '#fff' : 'rgba(255,255,255,0.35)', lineHeight: 1.8 }}>Featured ({pad(projects.length)})</button>
+            <button onClick={() => view === 'index' && closeIndex()} style={{ display: 'block', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', letterSpacing: '0.05em', color: view === 'featured' ? '#fff' : 'rgba(255,255,255,0.35)', lineHeight: 1.8 }}>Featured ({pad(projects.length)})</button>
             <button onClick={openIndex} style={{ display: 'block', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', letterSpacing: '0.05em', color: view === 'index' ? '#fff' : 'rgba(255,255,255,0.35)', lineHeight: 1.8 }}>Index ({pad(projects.length)})</button>
           </div>
           <div style={{ fontSize: '0.7rem', letterSpacing: '0.04em', color: 'rgba(255,255,255,0.6)', lineHeight: 1.9 }}>
@@ -283,39 +329,51 @@ export function ProjectShowcase() {
           </div>
         </div>
 
-        {/* ── Index overlay — animé ── */}
-        {view === 'index' && (
-          <div
-            ref={indexRef}
-            onWheel={(e) => {
-              const el = indexRef.current;
-              if (!el) return;
-              if (el.scrollTop === 0 && e.deltaY < -20) closeIndex();
-              if (el.scrollTop + el.clientHeight >= el.scrollHeight - 20 && e.deltaY > 40) closeIndex();
-            }}
-            style={{ position: 'absolute', inset: 0, zIndex: 30, background: '#f8f4ee', overflowY: 'auto', padding: '5rem 1.5rem 5rem', willChange: 'transform' }}
-          >
-            <button onClick={closeIndex} style={{ position: 'fixed', top: '1.25rem', left: '1.5rem', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', color: '#111' }}>PMC</button>
-            <button onClick={closeIndex} style={{ position: 'fixed', top: '1.25rem', right: '1.5rem', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', color: 'rgba(0,0,0,0.4)' }}>↑ Featured</button>
+        {/* ── Overlay glass pour la transition liquide (zIndex 28) ── */}
+        <div ref={glassOverlayRef} style={{
+          position: 'absolute', inset: 0, zIndex: 28,
+          backdropFilter: 'blur(26px)',
+          WebkitBackdropFilter: 'blur(26px)',
+          background: 'rgba(248, 244, 238, 0.1)',
+          opacity: 0, pointerEvents: 'none',
+        }} />
 
-            <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-              <div style={{ borderBottom: '1px solid rgba(0,0,0,0.1)', paddingBottom: '0.75rem', marginBottom: '0.5rem', display: 'grid', gridTemplateColumns: '3rem 1fr 8rem 6rem', gap: '1rem' }}>
-                {['#', 'Projet', 'Catégorie', 'Année'].map(h => <span key={h} style={{ fontSize: '0.6rem', letterSpacing: '0.1em', color: '#999', fontFamily: 'GeistMono, monospace' }}>{h}</span>)}
-              </div>
-              {projects.map((p, i) => (
-                <div key={p._id} onClick={() => navigate(`/project/${p.slug.current}`)}
-                  style={{ display: 'grid', gridTemplateColumns: '3rem 1fr 8rem 6rem', gap: '1rem', alignItems: 'baseline', padding: '1.1rem 0', borderBottom: '1px solid rgba(0,0,0,0.07)', cursor: 'pointer', transition: 'opacity 0.2s' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.4'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
-                  <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', color: '#aaa' }}>{pad(i + 1)}</span>
-                  <span style={{ fontSize: 'clamp(1.4rem, 2.5vw, 2.2rem)', fontWeight: 600, letterSpacing: '-0.025em', lineHeight: 1 }}>{p.title}</span>
-                  <span style={{ fontSize: '0.78rem', color: '#888' }}>{p.category}</span>
-                  <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.72rem', color: '#aaa' }}>{p.year}</span>
-                </div>
-              ))}
+        {/* ── Index overlay — toujours rendu, position contrôlée par GSAP ── */}
+        <div
+          ref={indexRef}
+          onWheel={(e) => {
+            const el = indexRef.current;
+            if (!el || view !== 'index') return;
+            if (el.scrollTop === 0 && e.deltaY < -20) closeIndex();
+            if (el.scrollTop + el.clientHeight >= el.scrollHeight - 20 && e.deltaY > 40) closeIndex();
+          }}
+          style={{
+            position: 'absolute', inset: 0, zIndex: 30,
+            background: '#f8f4ee', overflowY: 'auto',
+            padding: '5rem 1.5rem 5rem', willChange: 'transform',
+            pointerEvents: view === 'index' ? 'auto' : 'none',
+          }}
+        >
+          <button onClick={closeIndex} style={{ position: 'fixed', top: '1.25rem', left: '1.5rem', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', color: '#111' }}>PMC</button>
+          <button onClick={closeIndex} style={{ position: 'fixed', top: '1.25rem', right: '1.5rem', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', color: 'rgba(0,0,0,0.4)' }}>↑ Featured</button>
+
+          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            <div style={{ borderBottom: '1px solid rgba(0,0,0,0.1)', paddingBottom: '0.75rem', marginBottom: '0.5rem', display: 'grid', gridTemplateColumns: '3rem 1fr 8rem 6rem', gap: '1rem' }}>
+              {['#', 'Projet', 'Catégorie', 'Année'].map(h => <span key={h} style={{ fontSize: '0.6rem', letterSpacing: '0.1em', color: '#999', fontFamily: 'GeistMono, monospace' }}>{h}</span>)}
             </div>
+            {projects.map((p, i) => (
+              <div key={p._id} onClick={() => navigate(`/project/${p.slug.current}`)}
+                style={{ display: 'grid', gridTemplateColumns: '3rem 1fr 8rem 6rem', gap: '1rem', alignItems: 'baseline', padding: '1.1rem 0', borderBottom: '1px solid rgba(0,0,0,0.07)', cursor: 'pointer', transition: 'opacity 0.2s' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.4'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
+                <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', color: '#aaa' }}>{pad(i + 1)}</span>
+                <span style={{ fontSize: 'clamp(1.4rem, 2.5vw, 2.2rem)', fontWeight: 600, letterSpacing: '-0.025em', lineHeight: 1 }}>{p.title}</span>
+                <span style={{ fontSize: '0.78rem', color: '#888' }}>{p.category}</span>
+                <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.72rem', color: '#aaa' }}>{p.year}</span>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
       </div>
     </>
   );
