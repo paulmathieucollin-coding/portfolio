@@ -1,9 +1,13 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export function CustomCursor() {
   const dotRef = useRef<HTMLDivElement>(null);
+  const [isMobile] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches
+  );
 
   useEffect(() => {
+    if (isMobile) return;
     const move = (e: MouseEvent) => {
       if (dotRef.current) {
         dotRef.current.style.transform = `translate(${e.clientX - 12.5}px, ${e.clientY - 12.5}px)`;
@@ -12,6 +16,8 @@ export function CustomCursor() {
     window.addEventListener('mousemove', move, { passive: true });
     return () => window.removeEventListener('mousemove', move);
   }, []);
+
+  if (isMobile) return null;
 
   return (
     <div

@@ -94,6 +94,13 @@ export function ProjectShowcase() {
   const indexRef     = useRef<HTMLDivElement>(null);
   const indexAnimRef = useRef(false);
 
+  // ── État mobile ──
+  const [mobileView, setMobileView] = useState<'featured' | 'index'>('featured');
+  const [mobileDrag, setMobileDrag] = useState(0);
+  const [isActiveDrag, setIsActiveDrag] = useState(false);
+  const mobileTouchY = useRef(0);
+  const mobileIndexRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     client.fetch<SanityProject[]>(projectsQuery).then((data) => setProjects(data ?? []));
   }, []);
@@ -223,40 +230,140 @@ export function ProjectShowcase() {
   const isMobile = useIsMobile();
   const project = projects[current];
 
-  // ── Rendu mobile : index direct ──
+  // ── Rendu mobile : featured → swipe up → index ──
   if (isMobile) {
+    const featuredProject = projects[0];
+    const indexTransform = mobileView === 'index'
+      ? 'translateY(0)'
+      : `translateY(calc(100% - ${mobileDrag}px))`;
+
     return (
-      <div style={{ position: 'fixed', inset: 0, background: '#f8f4ee', overflowY: 'auto' }}>
+      <div style={{ position: 'fixed', inset: 0, background: '#0d0d0d', overflow: 'hidden' }}>
 
-        {/* Header sticky */}
-        <div style={{ position: 'sticky', top: 0, zIndex: 10, background: '#f8f4ee', borderBottom: '1px solid rgba(0,0,0,0.07)', padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.95rem', fontWeight: 700, color: '#111' }}>PMC</span>
-          <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', color: 'rgba(0,0,0,0.35)', letterSpacing: '0.05em' }}>{time} CET</span>
-        </div>
+        {/* ── Écran Featured ── */}
+        <div
+          onTouchStart={(e) => {
+            setIsActiveDrag(true);
+            mobileTouchY.current = e.touches[0].clientY;
+          }}
+          onTouchMove={(e) => {
+            if (mobileView !== 'featured') return;
+            const dy = mobileTouchY.current - e.touches[0].clientY;
+            if (dy > 0) setMobileDrag(Math.min(dy, window.innerHeight * 0.88));
+          }}
+          onTouchEnd={() => {
+            setIsActiveDrag(false);
+            if (mobileDrag > window.innerHeight * 0.2) setMobileView('index');
+            setMobileDrag(0);
+          }}
+          style={{ position: 'absolute', inset: 0 }}
+        >
+          {/* Image de fond */}
+          {featuredProject && (
+            <>
+              <img
+                src={urlFor(featuredProject.mainImage).width(800).height(1400).auto('format').url()}
+                alt={featuredProject.title}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.48) 0%, transparent 42%, rgba(0,0,0,0.78) 100%)' }} />
+            </>
+          )}
 
-        {/* Liste projets */}
-        <div style={{ padding: '0 1.25rem 6rem' }}>
-          {projects.map((p, i) => (
-            <div key={p._id}
-              onClick={() => navigate(`/project/${p.slug.current}`)}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 0', minHeight: '52px', borderBottom: '1px solid rgba(0,0,0,0.07)', cursor: 'pointer' }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', flex: 1, minWidth: 0 }}>
-                <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.58rem', color: '#bbb', flexShrink: 0 }}>{pad(i + 1)}</span>
-                <span style={{ fontSize: '1.15rem', fontWeight: 600, letterSpacing: '-0.02em', color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.title}</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0, marginLeft: '0.75rem' }}>
-                <span style={{ fontSize: '0.68rem', color: '#888' }}>{p.category}</span>
-                <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.6rem', color: '#bbb' }}>{p.year}</span>
-              </div>
+          {/* Header */}
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', zIndex: 2 }}>
+            <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.9rem', fontWeight: 700, color: '#fff' }}>PMC</span>
+            <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.58rem', color: 'rgba(255,255,255,0.38)', letterSpacing: '0.06em' }}>{time} CET</span>
+          </div>
+
+          {/* Titre du projet */}
+          {featuredProject && (
+            <div
+              onClick={() => navigate(`/project/${featuredProject.slug.current}`)}
+              style={{ position: 'absolute', bottom: '3.5rem', left: 0, right: 0, padding: '0 1.25rem', zIndex: 2 }}
+            >
+              <p style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.52rem', letterSpacing: '0.14em', color: 'rgba(255,255,255,0.32)', marginBottom: '0.55rem' }}>
+                FEATURED
+              </p>
+              <h2 style={{ fontSize: 'clamp(2.4rem, 11vw, 3.8rem)', fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 0.88, color: '#fff', margin: 0 }}>
+                {featuredProject.title}
+              </h2>
             </div>
-          ))}
+          )}
+
+          {/* Hint swipe */}
+          <div style={{
+            position: 'absolute', bottom: '1.1rem', left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.22rem',
+            opacity: mobileDrag > 10 ? 0 : 0.38,
+            transition: 'opacity 0.2s',
+            zIndex: 2, pointerEvents: 'none',
+          }}>
+            <span style={{ fontSize: '0.75rem', color: '#fff' }}>↑</span>
+            <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.48rem', letterSpacing: '0.16em', color: '#fff' }}>INDEX</span>
+          </div>
         </div>
 
-        {/* Barre bas fixe */}
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10, background: 'rgba(248,244,238,0.92)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderTop: '1px solid rgba(0,0,0,0.07)', padding: '0.85rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Link to="/contact" style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', letterSpacing: '0.06em', color: '#111' }}>Contact</Link>
-          <Link to="/mentions-legales" style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', letterSpacing: '0.06em', color: 'rgba(0,0,0,0.4)' }}>Mentions légales</Link>
-          <a href="https://www.instagram.com/paulmathieucollin" target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', letterSpacing: '0.06em', color: 'rgba(0,0,0,0.4)' }}>Instagram</a>
+        {/* ── Panel Index (glisse depuis le bas) ── */}
+        <div
+          ref={mobileIndexRef}
+          onTouchStart={(e) => { mobileTouchY.current = e.touches[0].clientY; }}
+          onTouchEnd={(e) => {
+            if (mobileView !== 'index') return;
+            const dy = e.changedTouches[0].clientY - mobileTouchY.current;
+            const scrollTop = mobileIndexRef.current?.scrollTop ?? 0;
+            if (dy > 70 && scrollTop === 0) setMobileView('featured');
+          }}
+          style={{
+            position: 'absolute', inset: 0,
+            background: '#f8f4ee',
+            overflowY: 'auto',
+            transform: indexTransform,
+            transition: isActiveDrag ? 'none' : 'transform 0.45s cubic-bezier(0.2, 0, 0, 1)',
+            willChange: 'transform',
+            zIndex: 5,
+            pointerEvents: mobileView === 'featured' && mobileDrag === 0 ? 'none' : 'auto',
+          }}
+        >
+          {/* Header index */}
+          <div style={{ position: 'sticky', top: 0, zIndex: 2, background: '#f8f4ee', borderBottom: '1px solid rgba(0,0,0,0.07)', padding: '1.1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <button onClick={() => setMobileView('featured')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.85rem', fontWeight: 700, color: '#111' }}>PMC</button>
+            <button onClick={() => setMobileView('featured')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.56rem', letterSpacing: '0.1em', color: 'rgba(0,0,0,0.32)' }}>↓ Featured</button>
+          </div>
+
+          {/* Liste projets */}
+          <div style={{ padding: '0 1.25rem 5.5rem' }}>
+            {projects.map((p, i) => (
+              <div key={p._id}
+                onClick={() => navigate(`/project/${p.slug.current}`)}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.95rem 0', minHeight: '56px', borderBottom: '1px solid rgba(0,0,0,0.07)', cursor: 'pointer' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', flex: 1, minWidth: 0 }}>
+                  <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.55rem', color: '#ccc', flexShrink: 0 }}>{pad(i + 1)}</span>
+                  <span style={{ fontSize: '1.1rem', fontWeight: 600, letterSpacing: '-0.02em', color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.title}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0, marginLeft: '0.75rem' }}>
+                  <span style={{ fontSize: '0.64rem', color: '#999' }}>{p.category}</span>
+                  <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.57rem', color: '#bbb' }}>{p.year}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Barre de navigation bas */}
+          <div style={{
+            position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10,
+            background: 'rgba(248,244,238,0.92)',
+            backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+            borderTop: '1px solid rgba(0,0,0,0.07)',
+            padding: '0.85rem 1.25rem',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            pointerEvents: mobileView === 'index' ? 'auto' : 'none',
+          }}>
+            <Link to="/contact" style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.62rem', letterSpacing: '0.06em', color: '#111' }}>Contact</Link>
+            <Link to="/mentions-legales" style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.62rem', letterSpacing: '0.06em', color: 'rgba(0,0,0,0.4)' }}>Mentions légales</Link>
+            <a href="https://www.instagram.com/paulmathieucollin" target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.62rem', letterSpacing: '0.06em', color: 'rgba(0,0,0,0.4)' }}>Instagram</a>
+          </div>
         </div>
       </div>
     );
