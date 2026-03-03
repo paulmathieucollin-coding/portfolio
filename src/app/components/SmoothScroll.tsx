@@ -11,6 +11,9 @@ interface SmoothScrollProps {
 
 export function SmoothScroll({ children }: SmoothScrollProps) {
   useEffect(() => {
+    // Sur mobile/touch, le scroll natif iOS est déjà fluide → on ne touche à rien
+    if (window.matchMedia('(hover: none)').matches) return;
+
     const lenis = new Lenis({
       duration: 1.4,
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -21,15 +24,13 @@ export function SmoothScroll({ children }: SmoothScrollProps) {
     // Connect Lenis to GSAP ScrollTrigger
     lenis.on('scroll', ScrollTrigger.update);
 
-    gsap.ticker.add((time) => {
-      lenis.raf(time * 1000);
-    });
-
+    const ticker = (time: number) => lenis.raf(time * 1000);
+    gsap.ticker.add(ticker);
     gsap.ticker.lagSmoothing(0);
 
     return () => {
       lenis.destroy();
-      gsap.ticker.remove((time) => lenis.raf(time * 1000));
+      gsap.ticker.remove(ticker);
     };
   }, []);
 

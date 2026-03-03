@@ -326,6 +326,7 @@ export function ProjectShowcase() {
           style={{
             position: 'absolute', inset: 0,
             display: 'flex', flexDirection: 'column',
+            overflow: 'hidden',             // contraint les enfants dans le panel
             background: '#f8f4ee',
             willChange: 'transform',
             zIndex: 5,
@@ -338,8 +339,8 @@ export function ProjectShowcase() {
             <button onClick={() => setMobileView('featured')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.56rem', letterSpacing: '0.1em', color: 'rgba(0,0,0,0.32)' }}>↓ Featured</button>
           </div>
 
-          {/* Zone scrollable */}
-          <div ref={mobileScrollRef} style={{ flex: 1, overflowY: 'auto' }}>
+          {/* Zone scrollable — minHeight:0 indispensable en flex column sinon la div s'étire et ne scroll pas */}
+          <div ref={mobileScrollRef} style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch' as never }}>
             <div style={{ padding: '0 1.25rem' }}>
               {projects.map((p, i) => (
                 <div key={p._id} onClick={() => navigate(`/project/${p.slug.current}`)}
