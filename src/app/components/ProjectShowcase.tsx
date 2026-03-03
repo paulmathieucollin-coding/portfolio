@@ -1,6 +1,20 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router';
 import gsap from 'gsap';
+
+// ── Hook responsive ──
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+  return isMobile;
+}
 import { client, urlFor } from '../../lib/sanity';
 import { projectsQuery } from '../../lib/queries';
 import type { SanityProject } from '../../types/project';
@@ -204,7 +218,47 @@ export function ProjectShowcase() {
     });
   }, []);
 
+  const isMobile = useIsMobile();
   const project = projects[current];
+
+  // ── Rendu mobile : index direct ──
+  if (isMobile) {
+    return (
+      <div style={{ position: 'fixed', inset: 0, background: '#f8f4ee', overflowY: 'auto' }}>
+
+        {/* Header sticky */}
+        <div style={{ position: 'sticky', top: 0, zIndex: 10, background: '#f8f4ee', borderBottom: '1px solid rgba(0,0,0,0.07)', padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.95rem', fontWeight: 700, color: '#111' }}>PMC</span>
+          <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', color: 'rgba(0,0,0,0.35)', letterSpacing: '0.05em' }}>{time} CET</span>
+        </div>
+
+        {/* Liste projets */}
+        <div style={{ padding: '0 1.25rem 6rem' }}>
+          {projects.map((p, i) => (
+            <div key={p._id}
+              onClick={() => navigate(`/project/${p.slug.current}`)}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 0', minHeight: '52px', borderBottom: '1px solid rgba(0,0,0,0.07)', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', flex: 1, minWidth: 0 }}>
+                <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.58rem', color: '#bbb', flexShrink: 0 }}>{pad(i + 1)}</span>
+                <span style={{ fontSize: '1.15rem', fontWeight: 600, letterSpacing: '-0.02em', color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.title}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0, marginLeft: '0.75rem' }}>
+                <span style={{ fontSize: '0.68rem', color: '#888' }}>{p.category}</span>
+                <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.6rem', color: '#bbb' }}>{p.year}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Barre bas fixe */}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10, background: 'rgba(248,244,238,0.92)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderTop: '1px solid rgba(0,0,0,0.07)', padding: '0.85rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Link to="/contact" style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', letterSpacing: '0.06em', color: '#111' }}>Contact</Link>
+          <Link to="/mentions-legales" style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', letterSpacing: '0.06em', color: 'rgba(0,0,0,0.4)' }}>Mentions légales</Link>
+          <a href="https://www.instagram.com/paulmathieucollin" target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', letterSpacing: '0.06em', color: 'rgba(0,0,0,0.4)' }}>Instagram</a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
