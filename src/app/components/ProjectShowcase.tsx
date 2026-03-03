@@ -114,6 +114,7 @@ export function ProjectShowcase() {
   // ── Entrance animation ──
   useEffect(() => {
     if (!projects.length || ready) return;
+    if (!curtainRef.current) return; // refs desktop nulles sur mobile → on n'exécute pas
     setReady(true);
     const tl = gsap.timeline({ defaults: { ease: 'power4.out' } });
     tl.set(curtainRef.current, { yPercent: 0 })
@@ -128,6 +129,7 @@ export function ProjectShowcase() {
   // ── Slide transition entre projets ──
   const goTo = useCallback((index: number) => {
     if (transitioning.current || !projects.length) return;
+    if (!curtainRef.current) return; // refs desktop nulles sur mobile
     transitioning.current = true;
     const tl = gsap.timeline({ onComplete: () => { transitioning.current = false; } });
     tl.to([titleRef.current, numRef.current, urlLabelRef.current], { opacity: 0, y: -14, duration: 0.25, ease: 'power2.in', stagger: 0.03 })
