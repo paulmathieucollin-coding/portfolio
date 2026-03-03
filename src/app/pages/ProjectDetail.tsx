@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { client, urlFor } from '../../lib/sanity';
-import { projectBySlugQuery } from '../../lib/queries';
+import { projectBySlugQuery, projectsQuery } from '../../lib/queries';
 import type { SanityProject } from '../../types/project';
 import { VideoPlayer } from '../components/VideoPlayer';
 
@@ -24,6 +24,7 @@ export function ProjectDetail() {
   const imagesRef = useRef<(HTMLDivElement | null)[]>([]);
   const [project, setProject] = useState<SanityProject | null>(null);
   const [loading, setLoading] = useState(true);
+  const [relatedProjects, setRelatedProjects] = useState<SanityProject[]>([]);
 
   useEffect(() => {
     if (!slug) return;
@@ -100,6 +101,20 @@ export function ProjectDetail() {
     });
 
     return () => ctx.revert();
+  }, [project]);
+
+  // ── 3 projets aléatoires (hors projet courant) ──
+  useEffect(() => {
+    if (!project) return;
+    client.fetch<SanityProject[]>(projectsQuery).then((all) => {
+      const others = (all ?? []).filter((p) => p._id !== project._id);
+      // Fisher-Yates shuffle
+      for (let i = others.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [others[i], others[j]] = [others[j], others[i]];
+      }
+      setRelatedProjects(others.slice(0, 3));
+    });
   }, [project]);
 
   if (loading) {
@@ -252,8 +267,41 @@ export function ProjectDetail() {
             </div>
           )}
 
+          {/* Voir aussi */}
+          {relatedProjects.length > 0 && (
+            <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: '3rem', marginBottom: '4rem' }}>
+              <p style={{
+                fontFamily: 'GeistMono, monospace', fontSize: '0.62rem',
+                letterSpacing: '0.12em', color: '#aaa', marginBottom: '2.5rem', textTransform: 'uppercase',
+              }}>Voir aussi</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+                {relatedProjects.map((p) => (
+                  <div key={p._id}
+                    onClick={() => navigate(`/project/${p.slug.current}`)}
+                    style={{ cursor: 'pointer' }}>
+                    <div style={{ aspectRatio: '16/9', overflow: 'hidden', marginBottom: '0.85rem', background: '#f0f0f0', borderRadius: '2px' }}>
+                      <img
+                        src={urlFor(p.mainImage).width(600).height(338).auto('format').url()}
+                        alt={p.title}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.45s ease' }}
+                        onMouseEnter={(e) => { (e.target as HTMLImageElement).style.transform = 'scale(1.04)'; }}
+                        onMouseLeave={(e) => { (e.target as HTMLImageElement).style.transform = 'scale(1)'; }}
+                      />
+                    </div>
+                    <p style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.58rem', letterSpacing: '0.1em', color: '#aaa', marginBottom: '0.35rem', textTransform: 'uppercase' }}>
+                      {p.category}{p.year ? ` — ${p.year}` : ''}
+                    </p>
+                    <p style={{ fontSize: '1rem', fontWeight: 600, letterSpacing: '-0.02em', color: '#111' }}>
+                      {p.title}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Nav */}
-          <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: '2.5rem' }}>
+          <div style={{ paddingBottom: '1.5rem' }}>
             <GlassButton variant="black" onClick={() => navigate('/')}>
               ← Tous les projets
             </GlassButton>

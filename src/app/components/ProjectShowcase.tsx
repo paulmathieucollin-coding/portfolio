@@ -67,21 +67,91 @@ function CustomLabel() {
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
-// ── Fond featured : image instantanée + vidéo Mux qui fade in quand prête ──
+const ORB_R = 28;
+const ORB_C = 2 * Math.PI * ORB_R; // ≈ 175.93
+
+// ── Fond featured : orbe de chargement 0→100% puis vidéo Mux en fondu ──
 function FeaturedBackground({ project, tall = false }: { project: SanityProject; tall?: boolean }) {
   const w = tall ? 800 : 1200;
   const h = tall ? 1400 : 675;
   const imgUrl = urlFor(project.mainImage).width(w).height(h).auto('format').url();
+
+  const circleRef = useRef<SVGCircleElement>(null);
+  const pctRef    = useRef<HTMLSpanElement>(null);
+  const orbRef    = useRef<HTMLDivElement>(null);
+  const animRef   = useRef<number | undefined>(undefined);
+  const startRef  = useRef<number | undefined>(undefined);
+  const doneRef   = useRef(false);
+
+  useEffect(() => {
+    if (!project.previewVideo) return;
+    doneRef.current  = false;
+    startRef.current = undefined;
+    if (orbRef.current)    orbRef.current.style.opacity = '1';
+    if (circleRef.current) circleRef.current.style.strokeDashoffset = String(ORB_C);
+    if (pctRef.current)    pctRef.current.textContent = '0%';
+
+    const step = (ts: number) => {
+      if (doneRef.current) return;
+      if (!startRef.current) startRef.current = ts;
+      const t = Math.min((ts - startRef.current) / 2200, 1);
+      const p = 85 * (1 - Math.pow(1 - t, 3)); // ease-out cubic → 85 %
+      if (circleRef.current) circleRef.current.style.strokeDashoffset = String(ORB_C * (1 - p / 100));
+      if (pctRef.current)    pctRef.current.textContent = `${Math.round(p)}%`;
+      if (t < 1) animRef.current = requestAnimationFrame(step);
+    };
+    animRef.current = requestAnimationFrame(step);
+    return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project._id, project.previewVideo]);
+
   return (
-    <div key={project._id} style={{ position: 'relative', width: '100%', height: '100%' }}>
-      {/* Image toujours visible — affichage instantané */}
-      <img src={imgUrl} alt={project.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-      {/* Vidéo : se charge en arrière-plan, remplace l'image en fondu dès qu'elle est prête */}
+    <div style={{ position: 'relative', width: '100%', height: '100%', background: '#0d0d0d' }}>
+
+      {/* Image de secours si pas de vidéo */}
+      {!project.previewVideo && (
+        <img src={imgUrl} alt={project.title}
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+      )}
+
+      {/* Orbe circulaire SVG pendant le chargement */}
       {project.previewVideo && (
-        <video
-          autoPlay muted loop playsInline preload="auto"
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0, transition: 'opacity 0.8s ease' }}
-          onCanPlay={(e) => { (e.target as HTMLVideoElement).style.opacity = '1'; }}
+        <div ref={orbRef} style={{
+          position: 'absolute', inset: 0, zIndex: 2,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          transition: 'opacity 0.5s ease',
+        }}>
+          <svg width="72" height="72" viewBox="0 0 72 72" style={{ transform: 'rotate(-90deg)' }}>
+            {/* piste */}
+            <circle cx="36" cy="36" r={ORB_R} fill="none"
+              stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" />
+            {/* progression */}
+            <circle ref={circleRef} cx="36" cy="36" r={ORB_R} fill="none"
+              stroke="rgba(255,255,255,0.75)" strokeWidth="1.5" strokeLinecap="round"
+              strokeDasharray={ORB_C} strokeDashoffset={ORB_C} />
+          </svg>
+          <span ref={pctRef} style={{
+            fontFamily: 'GeistMono, monospace', fontSize: '0.5rem',
+            letterSpacing: '0.1em', color: 'rgba(255,255,255,0.4)', marginTop: '0.75rem',
+          }}>0%</span>
+        </div>
+      )}
+
+      {/* Vidéo Mux — opacity 0, fade in à onCanPlay */}
+      {project.previewVideo && (
+        <video autoPlay muted loop playsInline preload="auto"
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0, transition: 'opacity 0.8s ease', zIndex: 1 }}
+          onCanPlay={(e) => {
+            const vid = e.target as HTMLVideoElement;
+            doneRef.current = true;
+            if (animRef.current) cancelAnimationFrame(animRef.current);
+            if (circleRef.current) circleRef.current.style.strokeDashoffset = '0';
+            if (pctRef.current)    pctRef.current.textContent = '100%';
+            setTimeout(() => {
+              if (orbRef.current) orbRef.current.style.opacity = '0';
+              vid.style.opacity = '1';
+            }, 350);
+          }}
         >
           <source src={`https://stream.mux.com/${project.previewVideo}.m3u8`} type="application/x-mpegURL" />
         </video>
@@ -378,7 +448,7 @@ export function ProjectShowcase() {
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
           {project && (
             <>
-              <FeaturedBackground project={project} />
+              <FeaturedBackground key={project._id} project={project} />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.05) 45%, rgba(0,0,0,0.72) 100%)' }} />
             </>
           )}
