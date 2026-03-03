@@ -186,7 +186,7 @@ export function ProjectShowcase() {
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
           {project && (
             <>
-              <img key={project._id} src={urlFor(project.mainImage).width(1920).height(1080).auto('format').url()} alt={project.title}
+              <img key={project._id} src={urlFor(project.mainImage).width(1200).height(675).auto('format').url()} alt={project.title}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.05) 45%, rgba(0,0,0,0.72) 100%)' }} />
             </>

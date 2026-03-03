@@ -1,9 +1,5 @@
 import { createBrowserRouter } from 'react-router';
 import { Home } from './pages/Home';
-import { Contact } from './pages/Contact';
-import { ProjectDetail } from './pages/ProjectDetail';
-import { Legal } from './pages/Legal';
-import { NotFound } from './pages/NotFound';
 
 export const router = createBrowserRouter([
   {
@@ -12,18 +8,18 @@ export const router = createBrowserRouter([
   },
   {
     path: '/contact',
-    Component: Contact,
+    lazy: () => import('./pages/Contact').then((m) => ({ Component: m.Contact })),
   },
   {
     path: '/project/:slug',
-    Component: ProjectDetail,
+    lazy: () => import('./pages/ProjectDetail').then((m) => ({ Component: m.ProjectDetail })),
   },
   {
     path: '/mentions-legales',
-    Component: Legal,
+    lazy: () => import('./pages/Legal').then((m) => ({ Component: m.Legal })),
   },
   {
     path: '*',
-    Component: NotFound,
+    lazy: () => import('./pages/NotFound').then((m) => ({ Component: m.NotFound })),
   },
 ]);

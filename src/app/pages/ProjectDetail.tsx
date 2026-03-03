@@ -35,6 +35,26 @@ export function ProjectDetail() {
       });
   }, [slug]);
 
+  // ── Meta dynamique par projet ──
+  useEffect(() => {
+    if (!project) return;
+    document.title = `${project.title} — Paul Mathieu Collin`;
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.setAttribute(
+        'content',
+        project.description
+          ? `${project.description} — Paul Mathieu Collin`
+          : `${project.title} — Projet de direction artistique par Paul Mathieu Collin.`
+      );
+    }
+    return () => {
+      document.title = 'Paul Mathieu Collin — Directeur artistique & Photographe';
+      const d = document.querySelector('meta[name="description"]');
+      if (d) d.setAttribute('content', 'Paul Mathieu Collin — Directeur artistique et photographe basé à Paris. Portfolio de projets visuels, campagnes et direction artistique.');
+    };
+  }, [project]);
+
   useEffect(() => {
     if (!project) return;
 
@@ -113,7 +133,7 @@ export function ProjectDetail() {
         {/* Hero */}
         <div ref={heroImgRef} className="pt-14 overflow-hidden" style={{ height: '75vh' }}>
           <ImageWithFallback
-            src={urlFor(project.mainImage).width(2000).auto('format').url()}
+            src={urlFor(project.mainImage).width(1600).auto('format').url()}
             alt={project.title}
             className="w-full h-full object-cover scale-[1.08]"
           />
@@ -223,7 +243,7 @@ export function ProjectDetail() {
                   style={{ borderRadius: '2px', aspectRatio: '16/9' }}
                 >
                   <ImageWithFallback
-                    src={urlFor(img).width(1600).auto('format').url()}
+                    src={urlFor(img).width(1200).auto('format').url()}
                     alt={`${project.title} — ${i + 1}`}
                     className="w-full h-full object-cover"
                   />
