@@ -66,6 +66,22 @@ function CustomLabel() {
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');
+
+// ── Fond featured : vidéo Mux si dispo, image sinon ──
+function FeaturedBackground({ project, tall = false }: { project: SanityProject; tall?: boolean }) {
+  const w = tall ? 800 : 1200;
+  const h = tall ? 1400 : 675;
+  const poster = urlFor(project.mainImage).width(w).height(h).auto('format').url();
+  if (project.previewVideo) {
+    return (
+      <video key={project._id} autoPlay muted loop playsInline poster={poster}
+        style={{ width: '100%', height: '100%', objectFit: 'cover' }}>
+        <source src={`https://stream.mux.com/${project.previewVideo}.m3u8`} type="application/x-mpegURL" />
+      </video>
+    );
+  }
+  return <img key={project._id} src={poster} alt={project.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />;
+}
 const showCursor = () => {
   const el = document.getElementById('showcase-cursor'); if (el) el.style.opacity = '1';
   const main = document.getElementById('main-cursor'); if (main) main.style.opacity = '0';
@@ -96,10 +112,11 @@ export function ProjectShowcase() {
 
   // ── État mobile ──
   const [mobileView, setMobileView] = useState<'featured' | 'index'>('featured');
-  const [mobileDrag, setMobileDrag] = useState(0);
-  const [isActiveDrag, setIsActiveDrag] = useState(false);
   const mobileTouchY = useRef(0);
+  const mobileDragActive = useRef(false);
+  const mobileFirstRender = useRef(true);
   const mobileIndexRef = useRef<HTMLDivElement>(null);
+  const mobileHintRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     client.fetch<SanityProject[]>(projectsQuery).then((data) => setProjects(data ?? []));
@@ -227,85 +244,104 @@ export function ProjectShowcase() {
     });
   }, []);
 
+  // ── Mobile : position du panel index pilotée par le DOM (zéro setState pendant le drag) ──
+  useEffect(() => {
+    const el = mobileIndexRef.current;
+    if (!el) return;
+    if (mobileFirstRender.current) {
+      mobileFirstRender.current = false;
+      el.style.transform = 'translateY(100%)';
+      el.style.transition = 'none';
+      return;
+    }
+    if (mobileView === 'index') {
+      el.style.transition = 'transform 0.42s cubic-bezier(0.2, 0, 0, 1)';
+      el.style.transform = 'translateY(0)';
+    } else {
+      el.style.transition = 'transform 0.36s cubic-bezier(0.4, 0, 1, 1)';
+      el.style.transform = 'translateY(100%)';
+    }
+  }, [mobileView]);
+
   const isMobile = useIsMobile();
   const project = projects[current];
 
-  // ── Rendu mobile : featured → swipe up → index ──
+  // ── Rendu mobile : featured → swipe haut → index ──
   if (isMobile) {
     const featuredProject = projects[0];
-    const indexTransform = mobileView === 'index'
-      ? 'translateY(0)'
-      : `translateY(calc(100% - ${mobileDrag}px))`;
+
+    const onFeaturedTouchStart = (e: React.TouchEvent) => {
+      mobileTouchY.current = e.touches[0].clientY;
+      mobileDragActive.current = true;
+      if (mobileHintRef.current) mobileHintRef.current.style.opacity = '0';
+    };
+    const onFeaturedTouchMove = (e: React.TouchEvent) => {
+      if (!mobileDragActive.current || mobileView !== 'featured') return;
+      const dy = mobileTouchY.current - e.touches[0].clientY;
+      if (dy > 0 && mobileIndexRef.current) {
+        mobileIndexRef.current.style.transition = 'none';
+        mobileIndexRef.current.style.transform = `translateY(calc(100% - ${Math.min(dy, window.innerHeight)}px))`;
+      }
+    };
+    const onFeaturedTouchEnd = () => {
+      mobileDragActive.current = false;
+      const el = mobileIndexRef.current;
+      if (!el) return;
+      const m = el.style.transform.match(/calc\(100% - ([\d.]+)px\)/);
+      const dragPx = m ? parseFloat(m[1]) : 0;
+      if (dragPx > 80) {
+        // Snap ouverture
+        setMobileView('index'); // le useEffect applique la transition
+      } else {
+        // Snap retour
+        el.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 1, 1)';
+        el.style.transform = 'translateY(100%)';
+        if (mobileHintRef.current) {
+          mobileHintRef.current.style.transition = 'opacity 0.3s';
+          mobileHintRef.current.style.opacity = '0.38';
+        }
+      }
+    };
 
     return (
       <div style={{ position: 'fixed', inset: 0, background: '#0d0d0d', overflow: 'hidden' }}>
 
         {/* ── Écran Featured ── */}
         <div
-          onTouchStart={(e) => {
-            setIsActiveDrag(true);
-            mobileTouchY.current = e.touches[0].clientY;
-          }}
-          onTouchMove={(e) => {
-            if (mobileView !== 'featured') return;
-            const dy = mobileTouchY.current - e.touches[0].clientY;
-            if (dy > 0) setMobileDrag(Math.min(dy, window.innerHeight * 0.88));
-          }}
-          onTouchEnd={() => {
-            setIsActiveDrag(false);
-            if (mobileDrag > window.innerHeight * 0.2) setMobileView('index');
-            setMobileDrag(0);
-          }}
+          onTouchStart={onFeaturedTouchStart}
+          onTouchMove={onFeaturedTouchMove}
+          onTouchEnd={onFeaturedTouchEnd}
           style={{ position: 'absolute', inset: 0 }}
         >
-          {/* Image de fond */}
           {featuredProject && (
             <>
-              <img
-                src={urlFor(featuredProject.mainImage).width(800).height(1400).auto('format').url()}
-                alt={featuredProject.title}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
+              <FeaturedBackground project={featuredProject} tall />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.48) 0%, transparent 42%, rgba(0,0,0,0.78) 100%)' }} />
             </>
           )}
 
-          {/* Header */}
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', zIndex: 2 }}>
             <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.9rem', fontWeight: 700, color: '#fff' }}>PMC</span>
             <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.58rem', color: 'rgba(255,255,255,0.38)', letterSpacing: '0.06em' }}>{time} CET</span>
           </div>
 
-          {/* Titre du projet */}
           {featuredProject && (
-            <div
-              onClick={() => navigate(`/project/${featuredProject.slug.current}`)}
-              style={{ position: 'absolute', bottom: '3.5rem', left: 0, right: 0, padding: '0 1.25rem', zIndex: 2 }}
-            >
-              <p style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.52rem', letterSpacing: '0.14em', color: 'rgba(255,255,255,0.32)', marginBottom: '0.55rem' }}>
-                FEATURED
-              </p>
+            <div onClick={() => navigate(`/project/${featuredProject.slug.current}`)}
+              style={{ position: 'absolute', bottom: '3.5rem', left: 0, right: 0, padding: '0 1.25rem', zIndex: 2 }}>
+              <p style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.52rem', letterSpacing: '0.14em', color: 'rgba(255,255,255,0.32)', marginBottom: '0.55rem' }}>FEATURED</p>
               <h2 style={{ fontSize: 'clamp(2.4rem, 11vw, 3.8rem)', fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 0.88, color: '#fff', margin: 0 }}>
                 {featuredProject.title}
               </h2>
             </div>
           )}
 
-          {/* Hint swipe */}
-          <div style={{
-            position: 'absolute', bottom: '1.1rem', left: '50%',
-            transform: 'translateX(-50%)',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.22rem',
-            opacity: mobileDrag > 10 ? 0 : 0.38,
-            transition: 'opacity 0.2s',
-            zIndex: 2, pointerEvents: 'none',
-          }}>
+          <div ref={mobileHintRef} style={{ position: 'absolute', bottom: '1.1rem', left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.22rem', opacity: 0.38, zIndex: 2, pointerEvents: 'none' }}>
             <span style={{ fontSize: '0.75rem', color: '#fff' }}>↑</span>
             <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.48rem', letterSpacing: '0.16em', color: '#fff' }}>INDEX</span>
           </div>
         </div>
 
-        {/* ── Panel Index (glisse depuis le bas) ── */}
+        {/* ── Panel Index (position gérée par DOM direct) ── */}
         <div
           ref={mobileIndexRef}
           onTouchStart={(e) => { mobileTouchY.current = e.touches[0].clientY; }}
@@ -319,24 +355,19 @@ export function ProjectShowcase() {
             position: 'absolute', inset: 0,
             background: '#f8f4ee',
             overflowY: 'auto',
-            transform: indexTransform,
-            transition: isActiveDrag ? 'none' : 'transform 0.45s cubic-bezier(0.2, 0, 0, 1)',
             willChange: 'transform',
             zIndex: 5,
-            pointerEvents: mobileView === 'featured' && mobileDrag === 0 ? 'none' : 'auto',
+            pointerEvents: mobileView === 'index' ? 'auto' : 'none',
           }}
         >
-          {/* Header index */}
           <div style={{ position: 'sticky', top: 0, zIndex: 2, background: '#f8f4ee', borderBottom: '1px solid rgba(0,0,0,0.07)', padding: '1.1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <button onClick={() => setMobileView('featured')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.85rem', fontWeight: 700, color: '#111' }}>PMC</button>
             <button onClick={() => setMobileView('featured')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.56rem', letterSpacing: '0.1em', color: 'rgba(0,0,0,0.32)' }}>↓ Featured</button>
           </div>
 
-          {/* Liste projets */}
           <div style={{ padding: '0 1.25rem 5.5rem' }}>
             {projects.map((p, i) => (
-              <div key={p._id}
-                onClick={() => navigate(`/project/${p.slug.current}`)}
+              <div key={p._id} onClick={() => navigate(`/project/${p.slug.current}`)}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.95rem 0', minHeight: '56px', borderBottom: '1px solid rgba(0,0,0,0.07)', cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', flex: 1, minWidth: 0 }}>
                   <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.55rem', color: '#ccc', flexShrink: 0 }}>{pad(i + 1)}</span>
@@ -350,16 +381,7 @@ export function ProjectShowcase() {
             ))}
           </div>
 
-          {/* Barre de navigation bas */}
-          <div style={{
-            position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10,
-            background: 'rgba(248,244,238,0.92)',
-            backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-            borderTop: '1px solid rgba(0,0,0,0.07)',
-            padding: '0.85rem 1.25rem',
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            pointerEvents: mobileView === 'index' ? 'auto' : 'none',
-          }}>
+          <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10, background: 'rgba(248,244,238,0.92)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderTop: '1px solid rgba(0,0,0,0.07)', padding: '0.85rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', pointerEvents: mobileView === 'index' ? 'auto' : 'none' }}>
             <Link to="/contact" style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.62rem', letterSpacing: '0.06em', color: '#111' }}>Contact</Link>
             <Link to="/mentions-legales" style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.62rem', letterSpacing: '0.06em', color: 'rgba(0,0,0,0.4)' }}>Mentions légales</Link>
             <a href="https://www.instagram.com/paulmathieucollin" target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.62rem', letterSpacing: '0.06em', color: 'rgba(0,0,0,0.4)' }}>Instagram</a>
@@ -374,12 +396,11 @@ export function ProjectShowcase() {
       <CustomLabel />
       <div style={{ position: 'fixed', inset: 0, background: '#0d0d0d', overflow: 'hidden' }}>
 
-        {/* Image de fond */}
+        {/* Fond : vidéo ou image selon le projet */}
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
           {project && (
             <>
-              <img key={project._id} src={urlFor(project.mainImage).width(1200).height(675).auto('format').url()} alt={project.title}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <FeaturedBackground project={project} />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.05) 45%, rgba(0,0,0,0.72) 100%)' }} />
             </>
           )}

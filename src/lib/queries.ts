@@ -7,6 +7,7 @@ export const projectsQuery = `
     category,
     year,
     mainImage,
+    "previewVideo": videos[0].muxPlaybackId,
   }
 `
 

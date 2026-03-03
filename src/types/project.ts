@@ -29,6 +29,7 @@ export interface SanityProject {
   category: 'Photo' | 'Vidéo' | 'Direction'
   year: number
   mainImage: SanityImage
+  previewVideo?: string   // muxPlaybackId du premier video (query home)
   gallery?: SanityImage[]
   videos?: SanityVideo[]
   description?: string
