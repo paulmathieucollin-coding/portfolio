@@ -70,16 +70,15 @@ export function ProjectShowcase() {
   const transitioning = useRef(false);
   const time = useClock();
 
-  const curtainRef      = useRef<HTMLDivElement>(null);
-  const titleRef        = useRef<HTMLHeadingElement>(null);
-  const numRef          = useRef<HTMLParagraphElement>(null);
-  const urlLabelRef     = useRef<HTMLSpanElement>(null);
-  const headerRef       = useRef<HTMLElement>(null);
-  const navPrevRef      = useRef<HTMLButtonElement>(null);
-  const navNextRef      = useRef<HTMLButtonElement>(null);
-  const indexRef        = useRef<HTMLDivElement>(null);
-  const indexAnimRef    = useRef(false);
-  const glassOverlayRef = useRef<HTMLDivElement>(null);
+  const curtainRef   = useRef<HTMLDivElement>(null);
+  const titleRef     = useRef<HTMLHeadingElement>(null);
+  const numRef       = useRef<HTMLParagraphElement>(null);
+  const urlLabelRef  = useRef<HTMLSpanElement>(null);
+  const headerRef    = useRef<HTMLElement>(null);
+  const navPrevRef   = useRef<HTMLButtonElement>(null);
+  const navNextRef   = useRef<HTMLButtonElement>(null);
+  const indexRef     = useRef<HTMLDivElement>(null);
+  const indexAnimRef = useRef(false);
 
   useEffect(() => {
     client.fetch<SanityProject[]>(projectsQuery).then((data) => setProjects(data ?? []));
@@ -142,32 +141,23 @@ export function ProjectShowcase() {
     return () => window.removeEventListener('keydown', onKey);
   }, [prev, next, view]);
 
-  // ── Liquid glass open ──
-  const triggerLiquidOpen = useCallback(() => {
+  // ── Open index (smooth slide up) ──
+  const openIndex = useCallback(() => {
     if (indexAnimRef.current) return;
     indexAnimRef.current = true;
-    const panel = indexRef.current;
-    const glass = glassOverlayRef.current;
-    if (!panel) { indexAnimRef.current = false; return; }
-
-    const tl = gsap.timeline({
-      onComplete: () => { setView('index'); indexAnimRef.current = false; }
+    if (indexRef.current) gsap.set(indexRef.current, { yPercent: 100 });
+    gsap.to(indexRef.current, {
+      yPercent: 0,
+      duration: 0.65,
+      ease: 'power4.out',
+      onComplete: () => { setView('index'); indexAnimRef.current = false; },
     });
-    // Flash glass overlay
-    if (glass) tl.to(glass, { opacity: 0.72, duration: 0.13, ease: 'power2.in' });
-    // Panel monte avec blur — effet verre liquide
-    tl.set(panel, { filter: 'blur(22px)' }, '<');
-    tl.to(panel, { yPercent: 0, duration: 0.6, ease: 'power4.out' }, '<');
-    // Overlay disparaît, blur se dissipe
-    if (glass) tl.to(glass, { opacity: 0, duration: 0.45 }, '>-0.15');
-    tl.to(panel, { filter: 'blur(0px)', duration: 0.55, ease: 'power2.out' }, '<');
   }, []);
 
-  // ── Scroll scrub featured → index ──
+  // ── Scroll progressif featured → index ──
   useEffect(() => {
     if (view !== 'featured') return;
-    // Remettre le panel en bas
-    if (indexRef.current) gsap.set(indexRef.current, { yPercent: 100, filter: 'blur(0px)' });
+    if (indexRef.current) gsap.set(indexRef.current, { yPercent: 100 });
 
     let scrollAcc = 0;
     let snapping = false;
@@ -181,44 +171,37 @@ export function ProjectShowcase() {
       if (!indexRef.current) return;
 
       if (progress < 1) {
-        // Peek progressif depuis le bas (max ~28%)
-        gsap.set(indexRef.current, { yPercent: 100 - progress * 28 });
-        // Rétraction si l'utilisateur remonte
+        // Peek progressif depuis le bas
+        gsap.set(indexRef.current, { yPercent: 100 - progress * 30 });
         if (scrollAcc === 0 && prevAcc > 0) {
-          gsap.to(indexRef.current, { yPercent: 100, duration: 0.35, ease: 'power2.out' });
+          gsap.to(indexRef.current, { yPercent: 100, duration: 0.3, ease: 'power2.out' });
         }
       } else {
         snapping = true;
-        triggerLiquidOpen();
+        indexAnimRef.current = true;
+        gsap.to(indexRef.current, {
+          yPercent: 0,
+          duration: 0.65,
+          ease: 'power4.out',
+          onComplete: () => { setView('index'); indexAnimRef.current = false; },
+        });
       }
     };
 
     window.addEventListener('wheel', onWheel, { passive: true });
     return () => window.removeEventListener('wheel', onWheel);
-  }, [view, triggerLiquidOpen]);
+  }, [view]);
 
-  // ── Open index (bouton header) ──
-  const openIndex = useCallback(() => {
-    if (indexAnimRef.current) return;
-    if (indexRef.current) gsap.set(indexRef.current, { yPercent: 100, filter: 'blur(0px)' });
-    triggerLiquidOpen();
-  }, [triggerLiquidOpen]);
-
-  // ── Close index avec glass ──
+  // ── Close index ──
   const closeIndex = useCallback(() => {
     if (!indexRef.current || indexAnimRef.current) return;
     indexAnimRef.current = true;
-    const panel = indexRef.current;
-    const glass = glassOverlayRef.current;
-
-    const tl = gsap.timeline({
-      onComplete: () => { setView('featured'); indexAnimRef.current = false; }
+    gsap.to(indexRef.current, {
+      yPercent: 100,
+      duration: 0.5,
+      ease: 'power3.in',
+      onComplete: () => { setView('featured'); indexAnimRef.current = false; },
     });
-    tl.to(panel, { filter: 'blur(16px)', duration: 0.15, ease: 'power2.in' });
-    if (glass) tl.to(glass, { opacity: 0.5, duration: 0.15 }, '<');
-    tl.to(panel, { yPercent: 100, duration: 0.48, ease: 'power3.in' }, '>');
-    if (glass) tl.to(glass, { opacity: 0, duration: 0.3 }, '<0.1');
-    tl.set(panel, { filter: 'blur(0px)' });
   }, []);
 
   const project = projects[current];
@@ -300,7 +283,7 @@ export function ProjectShowcase() {
           </div>
         )}
 
-        {/* Titre + numéro — masqué par l'overlay index (zIndex 25 < 30) */}
+        {/* Titre + numéro */}
         {project && (
           <div style={{ position: 'absolute', bottom: '3rem', left: 0, right: 0, zIndex: 25, padding: '0 1.5rem', color: '#fff' }}>
             <p ref={numRef} style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.65rem', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.4)', marginBottom: '0.5rem' }}>
@@ -316,7 +299,7 @@ export function ProjectShowcase() {
           </div>
         )}
 
-        {/* Barre de navigation persistante — toujours visible (zIndex 35 > 30) */}
+        {/* Barre de navigation persistante */}
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 35, padding: '0 1.5rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
             <button onClick={prev} style={{ background: 'none', border: 'none', color: view === 'index' ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.4)', fontSize: '0.7rem', letterSpacing: '0.06em', cursor: 'pointer', padding: 0, fontFamily: 'GeistMono, monospace', transition: 'color 0.35s' }}>[←] Prev</button>
@@ -329,23 +312,14 @@ export function ProjectShowcase() {
           </div>
         </div>
 
-        {/* ── Overlay glass pour la transition liquide (zIndex 28) ── */}
-        <div ref={glassOverlayRef} style={{
-          position: 'absolute', inset: 0, zIndex: 28,
-          backdropFilter: 'blur(26px)',
-          WebkitBackdropFilter: 'blur(26px)',
-          background: 'rgba(248, 244, 238, 0.1)',
-          opacity: 0, pointerEvents: 'none',
-        }} />
-
-        {/* ── Index overlay — toujours rendu, position contrôlée par GSAP ── */}
+        {/* ── Index overlay — toujours rendu, GSAP contrôle la position ── */}
         <div
           ref={indexRef}
           onWheel={(e) => {
             const el = indexRef.current;
             if (!el || view !== 'index') return;
+            // Fermer si on scroll vers le haut en haut du panel
             if (el.scrollTop === 0 && e.deltaY < -20) closeIndex();
-            if (el.scrollTop + el.clientHeight >= el.scrollHeight - 20 && e.deltaY > 40) closeIndex();
           }}
           style={{
             position: 'absolute', inset: 0, zIndex: 30,
