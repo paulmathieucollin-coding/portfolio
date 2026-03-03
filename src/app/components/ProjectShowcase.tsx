@@ -67,20 +67,27 @@ function CustomLabel() {
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
-// ── Fond featured : vidéo Mux si dispo, image sinon ──
+// ── Fond featured : image instantanée + vidéo Mux qui fade in quand prête ──
 function FeaturedBackground({ project, tall = false }: { project: SanityProject; tall?: boolean }) {
   const w = tall ? 800 : 1200;
   const h = tall ? 1400 : 675;
-  const poster = urlFor(project.mainImage).width(w).height(h).auto('format').url();
-  if (project.previewVideo) {
-    return (
-      <video key={project._id} autoPlay muted loop playsInline poster={poster}
-        style={{ width: '100%', height: '100%', objectFit: 'cover' }}>
-        <source src={`https://stream.mux.com/${project.previewVideo}.m3u8`} type="application/x-mpegURL" />
-      </video>
-    );
-  }
-  return <img key={project._id} src={poster} alt={project.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />;
+  const imgUrl = urlFor(project.mainImage).width(w).height(h).auto('format').url();
+  return (
+    <div key={project._id} style={{ position: 'relative', width: '100%', height: '100%' }}>
+      {/* Image toujours visible — affichage instantané */}
+      <img src={imgUrl} alt={project.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+      {/* Vidéo : se charge en arrière-plan, remplace l'image en fondu dès qu'elle est prête */}
+      {project.previewVideo && (
+        <video
+          autoPlay muted loop playsInline preload="auto"
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0, transition: 'opacity 0.8s ease' }}
+          onCanPlay={(e) => { (e.target as HTMLVideoElement).style.opacity = '1'; }}
+        >
+          <source src={`https://stream.mux.com/${project.previewVideo}.m3u8`} type="application/x-mpegURL" />
+        </video>
+      )}
+    </div>
+  );
 }
 const showCursor = () => {
   const el = document.getElementById('showcase-cursor'); if (el) el.style.opacity = '1';
@@ -113,10 +120,10 @@ export function ProjectShowcase() {
   // ── État mobile ──
   const [mobileView, setMobileView] = useState<'featured' | 'index'>('featured');
   const mobileTouchY = useRef(0);
-  const mobileDragActive = useRef(false);
+  const mobileWasAtTop = useRef(true);
   const mobileFirstRender = useRef(true);
   const mobileIndexRef = useRef<HTMLDivElement>(null);
-  const mobileHintRef = useRef<HTMLDivElement>(null);
+  const mobileScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     client.fetch<SanityProject[]>(projectsQuery).then((data) => setProjects(data ?? []));
@@ -244,7 +251,7 @@ export function ProjectShowcase() {
     });
   }, []);
 
-  // ── Mobile : position du panel index pilotée par le DOM (zéro setState pendant le drag) ──
+  // ── Mobile : transition de section (aucun setState pendant l'animation) ──
   useEffect(() => {
     const el = mobileIndexRef.current;
     if (!el) return;
@@ -254,63 +261,26 @@ export function ProjectShowcase() {
       el.style.transition = 'none';
       return;
     }
-    if (mobileView === 'index') {
-      el.style.transition = 'transform 0.42s cubic-bezier(0.2, 0, 0, 1)';
-      el.style.transform = 'translateY(0)';
-    } else {
-      el.style.transition = 'transform 0.36s cubic-bezier(0.4, 0, 1, 1)';
-      el.style.transform = 'translateY(100%)';
-    }
+    el.style.transition = 'transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    el.style.transform = mobileView === 'index' ? 'translateY(0)' : 'translateY(100%)';
   }, [mobileView]);
 
   const isMobile = useIsMobile();
   const project = projects[current];
 
-  // ── Rendu mobile : featured → swipe haut → index ──
+  // ── Rendu mobile : featured → swipe haut → index (transition de section) ──
   if (isMobile) {
     const featuredProject = projects[0];
-
-    const onFeaturedTouchStart = (e: React.TouchEvent) => {
-      mobileTouchY.current = e.touches[0].clientY;
-      mobileDragActive.current = true;
-      if (mobileHintRef.current) mobileHintRef.current.style.opacity = '0';
-    };
-    const onFeaturedTouchMove = (e: React.TouchEvent) => {
-      if (!mobileDragActive.current || mobileView !== 'featured') return;
-      const dy = mobileTouchY.current - e.touches[0].clientY;
-      if (dy > 0 && mobileIndexRef.current) {
-        mobileIndexRef.current.style.transition = 'none';
-        mobileIndexRef.current.style.transform = `translateY(calc(100% - ${Math.min(dy, window.innerHeight)}px))`;
-      }
-    };
-    const onFeaturedTouchEnd = () => {
-      mobileDragActive.current = false;
-      const el = mobileIndexRef.current;
-      if (!el) return;
-      const m = el.style.transform.match(/calc\(100% - ([\d.]+)px\)/);
-      const dragPx = m ? parseFloat(m[1]) : 0;
-      if (dragPx > 80) {
-        // Snap ouverture
-        setMobileView('index'); // le useEffect applique la transition
-      } else {
-        // Snap retour
-        el.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 1, 1)';
-        el.style.transform = 'translateY(100%)';
-        if (mobileHintRef.current) {
-          mobileHintRef.current.style.transition = 'opacity 0.3s';
-          mobileHintRef.current.style.opacity = '0.38';
-        }
-      }
-    };
-
     return (
       <div style={{ position: 'fixed', inset: 0, background: '#0d0d0d', overflow: 'hidden' }}>
 
         {/* ── Écran Featured ── */}
         <div
-          onTouchStart={onFeaturedTouchStart}
-          onTouchMove={onFeaturedTouchMove}
-          onTouchEnd={onFeaturedTouchEnd}
+          onTouchStart={(e) => { mobileTouchY.current = e.touches[0].clientY; }}
+          onTouchEnd={(e) => {
+            const dy = mobileTouchY.current - e.changedTouches[0].clientY;
+            if (dy > 40) setMobileView('index');
+          }}
           style={{ position: 'absolute', inset: 0 }}
         >
           {featuredProject && (
@@ -335,53 +305,60 @@ export function ProjectShowcase() {
             </div>
           )}
 
-          <div ref={mobileHintRef} style={{ position: 'absolute', bottom: '1.1rem', left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.22rem', opacity: 0.38, zIndex: 2, pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', bottom: '1.1rem', left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.22rem', opacity: 0.38, zIndex: 2, pointerEvents: 'none' }}>
             <span style={{ fontSize: '0.75rem', color: '#fff' }}>↑</span>
             <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.48rem', letterSpacing: '0.16em', color: '#fff' }}>INDEX</span>
           </div>
         </div>
 
-        {/* ── Panel Index (position gérée par DOM direct) ── */}
+        {/* ── Panel Index (flex column — header + scroll + footer) ── */}
         <div
           ref={mobileIndexRef}
-          onTouchStart={(e) => { mobileTouchY.current = e.touches[0].clientY; }}
+          onTouchStart={(e) => {
+            mobileTouchY.current = e.touches[0].clientY;
+            mobileWasAtTop.current = (mobileScrollRef.current?.scrollTop ?? 0) === 0;
+          }}
           onTouchEnd={(e) => {
             if (mobileView !== 'index') return;
             const dy = e.changedTouches[0].clientY - mobileTouchY.current;
-            const scrollTop = mobileIndexRef.current?.scrollTop ?? 0;
-            if (dy > 70 && scrollTop === 0) setMobileView('featured');
+            if (dy > 40 && mobileWasAtTop.current) setMobileView('featured');
           }}
           style={{
             position: 'absolute', inset: 0,
+            display: 'flex', flexDirection: 'column',
             background: '#f8f4ee',
-            overflowY: 'auto',
             willChange: 'transform',
             zIndex: 5,
             pointerEvents: mobileView === 'index' ? 'auto' : 'none',
           }}
         >
-          <div style={{ position: 'sticky', top: 0, zIndex: 2, background: '#f8f4ee', borderBottom: '1px solid rgba(0,0,0,0.07)', padding: '1.1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {/* Header fixe en haut du panel */}
+          <div style={{ flexShrink: 0, background: '#f8f4ee', borderBottom: '1px solid rgba(0,0,0,0.07)', padding: '1.1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <button onClick={() => setMobileView('featured')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.85rem', fontWeight: 700, color: '#111' }}>PMC</button>
             <button onClick={() => setMobileView('featured')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'GeistMono, monospace', fontSize: '0.56rem', letterSpacing: '0.1em', color: 'rgba(0,0,0,0.32)' }}>↓ Featured</button>
           </div>
 
-          <div style={{ padding: '0 1.25rem 5.5rem' }}>
-            {projects.map((p, i) => (
-              <div key={p._id} onClick={() => navigate(`/project/${p.slug.current}`)}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.95rem 0', minHeight: '56px', borderBottom: '1px solid rgba(0,0,0,0.07)', cursor: 'pointer' }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', flex: 1, minWidth: 0 }}>
-                  <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.55rem', color: '#ccc', flexShrink: 0 }}>{pad(i + 1)}</span>
-                  <span style={{ fontSize: '1.1rem', fontWeight: 600, letterSpacing: '-0.02em', color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.title}</span>
+          {/* Zone scrollable */}
+          <div ref={mobileScrollRef} style={{ flex: 1, overflowY: 'auto' }}>
+            <div style={{ padding: '0 1.25rem' }}>
+              {projects.map((p, i) => (
+                <div key={p._id} onClick={() => navigate(`/project/${p.slug.current}`)}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.95rem 0', minHeight: '56px', borderBottom: '1px solid rgba(0,0,0,0.07)', cursor: 'pointer' }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', flex: 1, minWidth: 0 }}>
+                    <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.55rem', color: '#ccc', flexShrink: 0 }}>{pad(i + 1)}</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 600, letterSpacing: '-0.02em', color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.title}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0, marginLeft: '0.75rem' }}>
+                    <span style={{ fontSize: '0.64rem', color: '#999' }}>{p.category}</span>
+                    <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.57rem', color: '#bbb' }}>{p.year}</span>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0, marginLeft: '0.75rem' }}>
-                  <span style={{ fontSize: '0.64rem', color: '#999' }}>{p.category}</span>
-                  <span style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.57rem', color: '#bbb' }}>{p.year}</span>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
-          <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10, background: 'rgba(248,244,238,0.92)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderTop: '1px solid rgba(0,0,0,0.07)', padding: '0.85rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', pointerEvents: mobileView === 'index' ? 'auto' : 'none' }}>
+          {/* Footer ancré en bas du panel (PAS position:fixed → ne déborde plus) */}
+          <div style={{ flexShrink: 0, background: 'rgba(248,244,238,0.96)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderTop: '1px solid rgba(0,0,0,0.07)', padding: '0.85rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Link to="/contact" style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.62rem', letterSpacing: '0.06em', color: '#111' }}>Contact</Link>
             <Link to="/mentions-legales" style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.62rem', letterSpacing: '0.06em', color: 'rgba(0,0,0,0.4)' }}>Mentions légales</Link>
             <a href="https://www.instagram.com/paulmathieucollin" target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.62rem', letterSpacing: '0.06em', color: 'rgba(0,0,0,0.4)' }}>Instagram</a>
