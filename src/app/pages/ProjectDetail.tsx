@@ -26,6 +26,11 @@ export function ProjectDetail() {
   const [loading, setLoading] = useState(true);
   const [relatedProjects, setRelatedProjects] = useState<SanityProject[]>([]);
 
+  // ── Scroll en haut à chaque changement de projet ──
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [slug]);
+
   useEffect(() => {
     if (!slug) return;
     client
