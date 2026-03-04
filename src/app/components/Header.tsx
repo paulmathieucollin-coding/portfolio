@@ -49,7 +49,7 @@ export function Header() {
             ref={logoRef}
             to="/"
             style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', letterSpacing: '0.08em' }}
-            className="tracking-tight transition-colors duration-300 hover:text-[#FF5500] uppercase"
+            className="tracking-tight transition-colors duration-300 hover:text-[#111] uppercase"
           >
             Paul Mathieu Collin
           </Link>
@@ -57,17 +57,18 @@ export function Header() {
           <nav ref={navRef} className="flex gap-8 md:gap-12">
             {[
               { path: '/', label: 'Work' },
+              { path: '/solutions', label: 'Solutions' },
               { path: '/contact', label: 'Contact' },
             ].map(({ path, label }) => (
               <Link
                 key={path}
                 to={path}
                 className="relative transition-colors duration-300 uppercase"
-                style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', letterSpacing: '0.08em', color: isActive(path) ? '#FF5500' : 'inherit' }}
+                style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', letterSpacing: '0.08em', color: isActive(path) ? '#111' : 'inherit' }}
               >
                 {label}
                 <span
-                  className="absolute left-0 -bottom-0.5 h-px bg-[#FF5500] transition-all duration-400"
+                  className="absolute left-0 -bottom-0.5 h-px bg-[#111] transition-all duration-400"
                   style={{ width: isActive(path) ? '100%' : '0%' }}
                 />
               </Link>

@@ -12,7 +12,7 @@ const sections = [
         <p><span className="text-[#111] font-medium">Statut :</span> Entrepreneur individuel</p>
         <p>
           <span className="text-[#111] font-medium">Email :</span>{' '}
-          <a href="mailto:hello@paulmathieucollin.fr" className="hover:text-[#FF5500] transition-colors duration-300">
+          <a href="mailto:hello@paulmathieucollin.fr" className="hover:text-[#111] transition-colors duration-300">
             hello@paulmathieucollin.fr
           </a>
         </p>
@@ -29,7 +29,7 @@ const sections = [
         <p><span className="text-[#111] font-medium">Adresse :</span> 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis</p>
         <p>
           <span className="text-[#111] font-medium">Site :</span>{' '}
-          <a href="https://vercel.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#FF5500] transition-colors duration-300">
+          <a href="https://vercel.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#111] transition-colors duration-300">
             vercel.com
           </a>
         </p>
@@ -55,7 +55,7 @@ const sections = [
         </p>
         <p>
           Conformément au RGPD et à la loi Informatique et Libertés, vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Pour exercer ce droit :{' '}
-          <a href="mailto:hello@paulmathieucollin.fr" className="hover:text-[#FF5500] transition-colors duration-300">
+          <a href="mailto:hello@paulmathieucollin.fr" className="hover:text-[#111] transition-colors duration-300">
             hello@paulmathieucollin.fr
           </a>
         </p>
@@ -68,7 +68,7 @@ const sections = [
     content: (
       <p className="text-gray-600" style={{ fontSize: '0.95rem', lineHeight: '1.75' }}>
         Pour toute question relative à ce site ou à son contenu :{' '}
-        <a href="mailto:hello@paulmathieucollin.fr" className="hover:text-[#FF5500] transition-colors duration-300">
+        <a href="mailto:hello@paulmathieucollin.fr" className="hover:text-[#111] transition-colors duration-300">
           hello@paulmathieucollin.fr
         </a>
       </p>
@@ -96,7 +96,7 @@ export function Legal() {
               }}
             >
               Mentions<br />
-              <span className="text-[#FF5500]">légales.</span>
+              <span className="text-[#111]">légales.</span>
             </h1>
 
             {/* Sections */}

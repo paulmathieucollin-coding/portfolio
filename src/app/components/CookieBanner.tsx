@@ -56,7 +56,7 @@ export function CookieBanner() {
         </button>
         <button
           onClick={accept}
-          style={{ background: '#FF5500', border: 'none', color: '#fff', fontSize: '0.6rem', letterSpacing: '0.1em', padding: '0.45rem 1rem', cursor: 'pointer', fontFamily: 'GeistMono, monospace', borderRadius: '1px' }}
+          style={{ background: '#333', border: 'none', color: '#fff', fontSize: '0.6rem', letterSpacing: '0.1em', padding: '0.45rem 1rem', cursor: 'pointer', fontFamily: 'GeistMono, monospace', borderRadius: '1px' }}
         >
           ACCEPTER
         </button>

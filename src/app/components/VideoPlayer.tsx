@@ -57,7 +57,7 @@ function NativePlayer({ url, aspectRatio }: { url: string; aspectRatio: string }
       )}
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '2rem 1.25rem 1.25rem', background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%)', transition: 'opacity 0.35s ease', opacity: showControls ? 1 : 0 }}>
         <div ref={progressRef} onClick={handleSeek} style={{ height: '2px', background: 'rgba(255,255,255,0.2)', borderRadius: '1px', marginBottom: '0.875rem', cursor: 'pointer' }}>
-          <div style={{ height: '100%', width: `${progress}%`, background: '#FF5500', borderRadius: '1px', transition: 'width 0.1s linear' }} />
+          <div style={{ height: '100%', width: `${progress}%`, background: '#333', borderRadius: '1px', transition: 'width 0.1s linear' }} />
         </div>
         <button onClick={togglePlay} style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.22)', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }}>
           {playing
@@ -78,7 +78,7 @@ function MuxVideoPlayer({ playbackId, aspectRatio, title }: { playbackId: string
         playbackId={playbackId}
         streamType="on-demand"
         metadata={{ video_title: title ?? 'Vidéo' }}
-        accentColor="#FF5500"
+        accentColor="#333"
         defaultHiddenCaptions
         style={{ width: '100%', height: '100%', '--media-object-fit': 'cover' } as React.CSSProperties}
       />

@@ -55,7 +55,7 @@ export function Contact() {
                 >
                   Travaillons
                   <br />
-                  <span className="text-[#FF5500]">ensemble.</span>
+                  <span className="text-[#111]">ensemble.</span>
                 </h1>
               </div>
 
@@ -93,7 +93,7 @@ export function Contact() {
                     </p>
                     <a
                       href="mailto:hello@paulmathieucollin.com"
-                      className="text-black hover:text-[#FF5500] transition-colors duration-300"
+                      className="text-black hover:text-[#111] transition-colors duration-300"
                       style={{ fontSize: '1rem' }}
                     >
                       hello@paulmathieucollin.com
@@ -118,7 +118,7 @@ export function Contact() {
                           href={href}
                           target={href !== '#' ? '_blank' : undefined}
                           rel={href !== '#' ? 'noopener noreferrer' : undefined}
-                          className="text-gray-600 hover:text-[#FF5500] transition-colors duration-300"
+                          className="text-gray-600 hover:text-[#111] transition-colors duration-300"
                           style={{ fontSize: '0.875rem' }}
                         >
                           {label}

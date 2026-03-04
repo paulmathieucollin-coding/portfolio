@@ -127,8 +127,8 @@ export function ProjectGrid() {
                 letterSpacing: '0.04em',
                 borderRadius: '2px',
                 border: '1px solid',
-                borderColor: activeFilter === cat ? '#FF5500' : 'rgba(0,0,0,0.15)',
-                backgroundColor: activeFilter === cat ? '#FF5500' : 'transparent',
+                borderColor: activeFilter === cat ? '#333' : 'rgba(0,0,0,0.15)',
+                backgroundColor: activeFilter === cat ? '#333' : 'transparent',
                 color: activeFilter === cat ? '#ffffff' : '#666666',
                 cursor: 'pointer',
               }}
@@ -207,7 +207,7 @@ export function ProjectGrid() {
                 {/* Meta */}
                 <div className="flex justify-between items-baseline">
                   <h3
-                    className="tracking-tight transition-colors duration-300 group-hover:text-[#FF5500]"
+                    className="tracking-tight transition-colors duration-300 group-hover:text-[#111]"
                     style={{ fontSize: '1.0625rem', fontWeight: 600 }}
                   >
                     {project.title}

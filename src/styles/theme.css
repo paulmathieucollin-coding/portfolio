@@ -5,7 +5,7 @@
   --font-family: 'GeistSans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-serif: 'GeistSans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'GeistMono', 'Courier New', monospace;
-  --orange: #FF5500;
+  --orange: #333333;
   --cream: #f8f4ee;
   --deep-black: #111111;
   --pure-white: #ffffff;
@@ -15,13 +15,13 @@
   --card-foreground: #111111;
   --popover: #ffffff;
   --popover-foreground: #111111;
-  --primary: #FF5500;
+  --primary: #333333;
   --primary-foreground: #ffffff;
   --secondary: #ffffff;
   --secondary-foreground: #111111;
   --muted: #efe9e0;
   --muted-foreground: #6b6560;
-  --accent: #FF5500;
+  --accent: #333333;
   --accent-foreground: #ffffff;
   --destructive: #d4183d;
   --destructive-foreground: #ffffff;
@@ -31,7 +31,7 @@
   --switch-background: #cbced4;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: #0000FF;
+  --ring: #333333;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);

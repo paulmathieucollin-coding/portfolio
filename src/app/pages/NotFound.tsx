@@ -52,7 +52,7 @@ export function NotFound() {
                 className="leading-[0.92] tracking-tight"
                 style={{ fontSize: 'clamp(4rem, 10vw, 10rem)', fontWeight: 600, letterSpacing: '-0.03em' }}
               >
-                <span className="text-[#FF5500]">Introuvable</span>
+                <span className="text-[#111]">Introuvable</span>
               </h1>
             </div>
           </div>

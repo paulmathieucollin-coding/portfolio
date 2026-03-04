@@ -502,7 +502,7 @@ export function ProjectShowcase() {
             <span style={{ display: 'block' }}>Paris, FR</span>
           </div>
           <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem', fontFamily: 'GeistMono, monospace', fontSize: '0.68rem', color: 'rgba(255,255,255,0.4)' }}>
-            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#FF5500', display: 'inline-block' }} />
+            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#333', display: 'inline-block' }} />
             {time} (CET)
           </div>
         </header>

@@ -35,7 +35,7 @@ export function Footer() {
                   href={href}
                   target={href !== '#' ? '_blank' : undefined}
                   rel={href !== '#' ? 'noopener noreferrer' : undefined}
-                  className="block text-gray-600 hover:text-[#FF5500] transition-colors duration-300"
+                  className="block text-gray-600 hover:text-[#111] transition-colors duration-300"
                   style={{ fontSize: '0.85rem' }}
                 >
                   {label}
@@ -53,7 +53,7 @@ export function Footer() {
             </p>
             <a
               href="mailto:hello@paulmathieucollin.com"
-              className="block text-gray-600 hover:text-[#FF5500] transition-colors duration-300"
+              className="block text-gray-600 hover:text-[#111] transition-colors duration-300"
               style={{ fontSize: '0.85rem' }}
             >
               hello@paulmathieucollin.com
@@ -69,7 +69,7 @@ export function Footer() {
         </p>
         <Link
           to="/mentions-legales"
-          className="text-gray-300 hover:text-[#FF5500] transition-colors duration-300"
+          className="text-gray-300 hover:text-[#111] transition-colors duration-300"
           style={{ fontSize: '0.75rem' }}
         >
           Mentions légales
