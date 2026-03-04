@@ -28,7 +28,12 @@ export function ProjectDetail() {
 
   // ── Scroll en haut à chaque changement de projet ──
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    const lenis = (window as any).__lenis;
+    if (lenis) {
+      lenis.scrollTo(0, { immediate: true });
+    } else {
+      window.scrollTo(0, 0);
+    }
   }, [slug]);
 
   useEffect(() => {

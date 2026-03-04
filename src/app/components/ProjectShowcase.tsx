@@ -432,7 +432,7 @@ export function ProjectShowcase() {
           <div style={{ flexShrink: 0, background: 'rgba(248,244,238,0.96)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderTop: '1px solid rgba(0,0,0,0.07)', padding: '0.85rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Link to="/contact" style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.62rem', letterSpacing: '0.06em', color: '#111' }}>Contact</Link>
             <Link to="/mentions-legales" style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.62rem', letterSpacing: '0.06em', color: 'rgba(0,0,0,0.4)' }}>Mentions légales</Link>
-            <a href="https://www.instagram.com/paulmathieucollin" target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.62rem', letterSpacing: '0.06em', color: 'rgba(0,0,0,0.4)' }}>Instagram</a>
+            <a href="https://www.instagram.com/pmc.mp3" target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'GeistMono, monospace', fontSize: '0.62rem', letterSpacing: '0.06em', color: 'rgba(0,0,0,0.4)' }}>Instagram</a>
           </div>
         </div>
       </div>
@@ -539,7 +539,7 @@ export function ProjectShowcase() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
             <a href="/mentions-legales" style={{ fontSize: '0.7rem', letterSpacing: '0.06em', color: view === 'index' ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.4)', fontFamily: 'GeistMono, monospace', transition: 'color 0.35s' }}>Mentions légales</a>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.7rem', letterSpacing: '0.06em', color: view === 'index' ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.4)', fontFamily: 'GeistMono, monospace', transition: 'color 0.35s' }}>Instagram</a>
+            <a href="https://www.instagram.com/pmc.mp3" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.7rem', letterSpacing: '0.06em', color: view === 'index' ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.4)', fontFamily: 'GeistMono, monospace', transition: 'color 0.35s' }}>Instagram</a>
             <button onClick={next} style={{ background: 'none', border: 'none', color: view === 'index' ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.4)', fontSize: '0.7rem', letterSpacing: '0.06em', cursor: 'pointer', padding: 0, fontFamily: 'GeistMono, monospace', transition: 'color 0.35s' }}>Next [→]</button>
           </div>
         </div>

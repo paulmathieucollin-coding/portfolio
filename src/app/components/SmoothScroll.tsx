@@ -21,6 +21,9 @@ export function SmoothScroll({ children }: SmoothScrollProps) {
       smoothWheel: true,
     });
 
+    // Exposer Lenis globalement pour permettre le scroll-to-top depuis les pages
+    (window as any).__lenis = lenis;
+
     // Connect Lenis to GSAP ScrollTrigger
     lenis.on('scroll', ScrollTrigger.update);
 
@@ -29,6 +32,7 @@ export function SmoothScroll({ children }: SmoothScrollProps) {
     gsap.ticker.lagSmoothing(0);
 
     return () => {
+      (window as any).__lenis = null;
       lenis.destroy();
       gsap.ticker.remove(ticker);
     };

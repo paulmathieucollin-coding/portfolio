@@ -108,14 +108,20 @@ export function Contact() {
                       RÉSEAUX
                     </p>
                     <div className="flex gap-4">
-                      {['Instagram', 'LinkedIn', 'Behance'].map((s) => (
+                      {[
+                        { label: 'Instagram', href: 'https://www.instagram.com/pmc.mp3' },
+                        { label: 'LinkedIn', href: '#' },
+                        { label: 'Behance', href: '#' },
+                      ].map(({ label, href }) => (
                         <a
-                          key={s}
-                          href="#"
+                          key={label}
+                          href={href}
+                          target={href !== '#' ? '_blank' : undefined}
+                          rel={href !== '#' ? 'noopener noreferrer' : undefined}
                           className="text-gray-600 hover:text-[#FF5500] transition-colors duration-300"
                           style={{ fontSize: '0.875rem' }}
                         >
-                          {s}
+                          {label}
                         </a>
                       ))}
                     </div>

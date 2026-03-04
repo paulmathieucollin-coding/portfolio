@@ -26,13 +26,15 @@ export function Footer() {
             </p>
             <div className="space-y-2">
               {[
-                { label: 'Instagram', href: '#' },
+                { label: 'Instagram', href: 'https://www.instagram.com/pmc.mp3' },
                 { label: 'Behance', href: '#' },
                 { label: 'LinkedIn', href: '#' },
               ].map(({ label, href }) => (
                 <a
                   key={label}
                   href={href}
+                  target={href !== '#' ? '_blank' : undefined}
+                  rel={href !== '#' ? 'noopener noreferrer' : undefined}
                   className="block text-gray-600 hover:text-[#FF5500] transition-colors duration-300"
                   style={{ fontSize: '0.85rem' }}
                 >
