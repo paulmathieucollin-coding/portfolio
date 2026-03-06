@@ -277,6 +277,80 @@ export function ProjectDetail() {
             </div>
           )}
 
+          {/* Tags */}
+          {project.tags && project.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-16 md:mb-20">
+              {project.tags.map((tag) => (
+                <span
+                  key={tag}
+                  style={{
+                    fontFamily: 'GeistMono, monospace',
+                    fontSize: '0.62rem',
+                    letterSpacing: '0.08em',
+                    padding: '0.3rem 0.75rem',
+                    border: '1px solid rgba(0,0,0,0.12)',
+                    borderRadius: '2px',
+                    color: '#888',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Crédits */}
+          {project.credits && project.credits.length > 0 && (
+            <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: '2.5rem', marginBottom: '3rem' }}>
+              <p style={{
+                fontFamily: 'GeistMono, monospace', fontSize: '0.62rem',
+                letterSpacing: '0.12em', color: '#aaa', marginBottom: '1.5rem', textTransform: 'uppercase',
+              }}>Crédits</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-y-4 gap-x-8">
+                {project.credits.map((credit, i) => (
+                  <div key={credit._key || i}>
+                    <p style={{ fontSize: '0.7rem', letterSpacing: '0.06em', color: '#aaa', marginBottom: '0.2rem', textTransform: 'uppercase', fontFamily: 'GeistMono, monospace' }}>
+                      {credit.role}
+                    </p>
+                    <p style={{ fontSize: '0.9375rem', fontWeight: 500, color: '#111' }}>
+                      {credit.name}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Lien externe */}
+          {project.externalLink && (
+            <div style={{ marginBottom: '3rem' }}>
+              <a
+                href={project.externalLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontFamily: 'GeistMono, monospace',
+                  fontSize: '0.72rem',
+                  letterSpacing: '0.06em',
+                  color: '#333',
+                  padding: '0.55rem 1.2rem',
+                  border: '1px solid rgba(0,0,0,0.15)',
+                  borderRadius: '2px',
+                  textDecoration: 'none',
+                  transition: 'all 0.25s ease',
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = '#333'; (e.currentTarget as HTMLAnchorElement).style.color = '#fff'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLAnchorElement).style.color = '#333'; }}
+              >
+                Voir le projet en ligne ↗
+              </a>
+            </div>
+          )}
+
           {/* Voir aussi */}
           {relatedProjects.length > 0 && (
             <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: '3rem', marginBottom: '4rem' }}>

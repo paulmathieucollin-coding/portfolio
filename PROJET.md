@@ -45,7 +45,7 @@ portfolio_final/
 │   │   │   ├── Footer.tsx           ← Pied de page
 │   │   │   ├── Hero.tsx             ← Section hero de la homepage
 │   │   │   ├── ProjectGrid.tsx      ← Grille des projets (fetch Sanity)
-│   │   │   ├── VideoPlayer.tsx      ← Player vidéo (YouTube / Vimeo / MP4)
+│   │   │   ├── VideoPlayer.tsx      ← Player vidéo (Mux / MP4)
 │   │   │   ├── GlassButton.tsx      ← Bouton glassmorphism (variantes black/white)
 │   │   │   ├── CustomCursor.tsx     ← Curseur rond 5px blanc (mix-blend-mode: difference)
 │   │   │   ├── SmoothScroll.tsx     ← Wrapper Lenis pour scroll fluide
@@ -82,7 +82,7 @@ portfolio_final/
 | Cream (fond) | `#f8f4ee` | Background global |
 | Deep Black | `#111111` | Texte principal |
 | Pure White | `#ffffff` | Texte sur fond sombre |
-| Orange (CTA) | `#FF5500` | Boutons, accents, hover |
+| Anthracite (CTA) | `#333333` | Boutons, accents, hover |
 | Muted | `#efe9e0` | Fonds secondaires |
 | Muted Foreground | `#6b6560` | Texte secondaire |
 
@@ -192,10 +192,9 @@ git push origin main
 
 ## Player Vidéo
 
-Le composant `VideoPlayer` supporte 3 types d'URL :
-- **YouTube** : `https://youtube.com/watch?v=...` ou `https://youtu.be/...`
-- **Vimeo** : `https://vimeo.com/...`
-- **MP4 direct** : toute autre URL (player natif avec contrôles glass)
+Le composant `VideoPlayer` supporte 2 modes :
+- **Mux** : streaming HLS via Mux Playback ID (prioritaire)
+- **MP4 direct** : toute URL directe vers un fichier vidéo (player natif avec contrôles glass)
 
 Les formats d'aspect ratio disponibles : `16/9`, `9/16`, `4/3`, `1/1`
 

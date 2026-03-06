@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { client, urlFor } from '../../lib/sanity';
-import { projectsQuery } from '../../lib/queries';
+import { projectsQuery, allTagsQuery } from '../../lib/queries';
 import type { SanityProject } from '../../types/project';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -18,13 +18,19 @@ export function ProjectGrid() {
   const filtersRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
   const [activeFilter, setActiveFilter] = useState('Tous');
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [allTags, setAllTags] = useState<string[]>([]);
   const [projects, setProjects] = useState<SanityProject[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    client.fetch<SanityProject[]>(projectsQuery)
-      .then((data) => {
-        setProjects(data ?? []);
+    Promise.all([
+      client.fetch<SanityProject[]>(projectsQuery),
+      client.fetch<string[]>(allTagsQuery),
+    ])
+      .then(([projectData, tagData]) => {
+        setProjects(projectData ?? []);
+        setAllTags((tagData ?? []).sort());
         setLoading(false);
       })
       .catch((err) => {
@@ -33,39 +39,43 @@ export function ProjectGrid() {
       });
   }, []);
 
-  const filtered =
-    activeFilter === 'Tous' ? projects : projects.filter((p) => p.category === activeFilter);
+  const filtered = projects.filter((p) => {
+    const matchCategory = activeFilter === 'Tous' || p.category === activeFilter;
+    const matchTag = !activeTag || (p.tags && p.tags.includes(activeTag));
+    return matchCategory && matchTag;
+  });
 
   useEffect(() => {
     if (loading) return;
 
     const ctx = gsap.context(() => {
-      // Heading reveal
-      gsap.from(headingRef.current, {
-        opacity: 0,
-        y: 30,
-        duration: 0.9,
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: headingRef.current,
-          start: 'top 85%',
-        },
-      });
+      if (headingRef.current) {
+        gsap.from(headingRef.current, {
+          opacity: 0,
+          y: 30,
+          duration: 0.9,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: headingRef.current,
+            start: 'top 85%',
+          },
+        });
+      }
 
-      // Filters reveal
-      gsap.from(filtersRef.current?.children ? Array.from(filtersRef.current.children) : [], {
-        opacity: 0,
-        y: 16,
-        duration: 0.6,
-        stagger: 0.06,
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: filtersRef.current,
-          start: 'top 88%',
-        },
-      });
+      if (filtersRef.current) {
+        gsap.from(Array.from(filtersRef.current.children), {
+          opacity: 0,
+          y: 16,
+          duration: 0.6,
+          stagger: 0.06,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: filtersRef.current,
+            start: 'top 88%',
+          },
+        });
+      }
 
-      // Cards stagger reveal
       cardsRef.current.forEach((card, i) => {
         if (!card) return;
         gsap.from(card, {
@@ -95,7 +105,7 @@ export function ProjectGrid() {
         { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out', delay: i * 0.05 },
       );
     });
-  }, [activeFilter]);
+  }, [activeFilter, activeTag]);
 
   return (
     <section id="projects" ref={sectionRef} className="py-20 md:py-32 px-6 md:px-12">
@@ -113,12 +123,12 @@ export function ProjectGrid() {
           </p>
         </div>
 
-        {/* Filters */}
-        <div ref={filtersRef} className="flex gap-2 mb-12 flex-wrap">
+        {/* Category filters */}
+        <div ref={filtersRef} className="flex gap-2 mb-4 flex-wrap">
           {CATEGORIES.map((cat) => (
             <button
               key={cat}
-              onClick={() => setActiveFilter(cat)}
+              onClick={() => { setActiveFilter(cat); setActiveTag(null); }}
               className="transition-all duration-300"
               style={{
                 padding: '0.4rem 1.1rem',
@@ -137,6 +147,38 @@ export function ProjectGrid() {
             </button>
           ))}
         </div>
+
+        {/* Tag filters */}
+        {allTags.length > 0 && (
+          <div className="flex gap-1.5 mb-12 flex-wrap">
+            {allTags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+                className="transition-all duration-300"
+                style={{
+                  padding: '0.25rem 0.7rem',
+                  fontSize: '0.62rem',
+                  fontWeight: 500,
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  borderRadius: '2px',
+                  border: '1px solid',
+                  fontFamily: 'GeistMono, monospace',
+                  borderColor: activeTag === tag ? '#333' : 'rgba(0,0,0,0.1)',
+                  backgroundColor: activeTag === tag ? '#333' : 'transparent',
+                  color: activeTag === tag ? '#fff' : '#999',
+                  cursor: 'pointer',
+                }}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* No tags yet — keep spacing */}
+        {allTags.length === 0 && <div className="mb-12" />}
 
         {/* Loading skeleton */}
         {loading && (
@@ -220,6 +262,13 @@ export function ProjectGrid() {
               </div>
             ))}
           </div>
+        )}
+
+        {/* Empty state */}
+        {!loading && filtered.length === 0 && (
+          <p style={{ textAlign: 'center', color: '#aaa', fontSize: '0.9rem', padding: '3rem 0' }}>
+            Aucun projet ne correspond à ces filtres.
+          </p>
         )}
       </div>
     </section>

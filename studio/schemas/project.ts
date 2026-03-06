@@ -36,10 +36,33 @@ export const projectType = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'tags',
+      title: 'Tags',
+      type: 'array',
+      of: [{ type: 'string' }],
+      options: {
+        layout: 'tags',
+      },
+      description: 'Mots-clés pour le filtrage avancé (ex: mode, architecture, portrait, corporate...)',
+    }),
+    defineField({
       name: 'year',
       title: 'Année',
       type: 'number',
       validation: (Rule) => Rule.required().min(1900).max(2100).integer(),
+    }),
+    defineField({
+      name: 'featured',
+      title: 'Mis en avant',
+      type: 'boolean',
+      description: 'Afficher ce projet en featured sur la homepage.',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'sortOrder',
+      title: 'Ordre d\'affichage',
+      type: 'number',
+      description: 'Numéro d\'ordre pour le tri manuel (plus petit = affiché en premier). Laisser vide pour tri par année.',
     }),
     defineField({
       name: 'mainImage',
@@ -80,7 +103,7 @@ export const projectType = defineType({
             },
             {
               name: 'url',
-              title: 'URL (YouTube, Vimeo, ou lien direct MP4)',
+              title: 'URL (lien direct MP4)',
               type: 'url',
               description: 'Utilisé seulement si pas de Mux Playback ID.',
             },
@@ -124,18 +147,66 @@ export const projectType = defineType({
       type: 'text',
       rows: 4,
     }),
+    defineField({
+      name: 'credits',
+      title: 'Crédits',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            {
+              name: 'role',
+              title: 'Rôle',
+              type: 'string',
+              description: 'Ex: Photographe, Directeur artistique, Styliste...',
+            },
+            {
+              name: 'name',
+              title: 'Nom',
+              type: 'string',
+            },
+          ],
+          preview: {
+            select: { title: 'role', subtitle: 'name' },
+          },
+        },
+      ],
+    }),
+    defineField({
+      name: 'externalLink',
+      title: 'Lien externe',
+      type: 'url',
+      description: 'Lien vers le site du client, la publication, etc.',
+    }),
+  ],
+  orderings: [
+    {
+      title: 'Ordre manuel',
+      name: 'sortOrderAsc',
+      by: [
+        { field: 'sortOrder', direction: 'asc' },
+        { field: 'year', direction: 'desc' },
+      ],
+    },
+    {
+      title: 'Année (récent → ancien)',
+      name: 'yearDesc',
+      by: [{ field: 'year', direction: 'desc' }],
+    },
   ],
   preview: {
     select: {
       title: 'title',
       category: 'category',
       year: 'year',
+      featured: 'featured',
       media: 'mainImage',
     },
     prepare(selection) {
-      const { title, category, year, media } = selection
+      const { title, category, year, featured, media } = selection
       return {
-        title,
+        title: `${featured ? '⭐ ' : ''}${title}`,
         subtitle: `${category} · ${year}`,
         media,
       }

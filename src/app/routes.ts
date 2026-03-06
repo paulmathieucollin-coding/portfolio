@@ -25,18 +25,8 @@ export const router = createBrowserRouter([
     errorElement: createElement(ErrorPage),
   },
   {
-    path: '/solutions/sound-design',
-    lazy: () => import('./pages/SoundDesign').then((m) => ({ Component: m.SoundDesign })),
-    errorElement: createElement(ErrorPage),
-  },
-  {
-    path: '/solutions/video-production',
-    lazy: () => import('./pages/VideoProduction').then((m) => ({ Component: m.VideoProduction })),
-    errorElement: createElement(ErrorPage),
-  },
-  {
-    path: '/solutions/production-pmc',
-    lazy: () => import('./pages/ProductionPMC').then((m) => ({ Component: m.ProductionPMC })),
+    path: '/solutions/:slug',
+    lazy: () => import('./pages/ServiceDetail').then((m) => ({ Component: m.ServiceDetail })),
     errorElement: createElement(ErrorPage),
   },
   {
