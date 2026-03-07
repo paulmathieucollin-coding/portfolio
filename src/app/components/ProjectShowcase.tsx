@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router';
 import gsap from 'gsap';
+import Hls from 'hls.js';
 
 // ── Hook responsive ──
 function useIsMobile() {
@@ -70,6 +71,66 @@ const pad = (n: number) => String(n).padStart(2, '0');
 const ORB_R = 28;
 const ORB_C = 2 * Math.PI * ORB_R; // ≈ 175.93
 
+// ── Lecteur HLS compatible tous navigateurs ──
+function HlsVideo({ src, onReady }: { src: string; onReady: () => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const hlsRef = useRef<Hls | null>(null);
+  const firedRef = useRef(false);
+
+  const handleReady = useCallback(() => {
+    if (firedRef.current) return;
+    firedRef.current = true;
+    const vid = videoRef.current;
+    if (vid) vid.style.opacity = '1';
+    onReady();
+  }, [onReady]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    firedRef.current = false;
+
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      // Safari : HLS natif
+      video.src = src;
+      video.addEventListener('canplay', handleReady, { once: true });
+      return () => video.removeEventListener('canplay', handleReady);
+    }
+
+    if (Hls.isSupported()) {
+      const hls = new Hls({ enableWorker: true, lowLatencyMode: false });
+      hlsRef.current = hls;
+      hls.loadSource(src);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play().catch(() => {});
+      });
+      video.addEventListener('canplay', handleReady, { once: true });
+      return () => {
+        video.removeEventListener('canplay', handleReady);
+        hls.destroy();
+        hlsRef.current = null;
+      };
+    }
+
+    // Fallback : tenter le src direct
+    video.src = src;
+    video.addEventListener('canplay', handleReady, { once: true });
+    return () => video.removeEventListener('canplay', handleReady);
+  }, [src, handleReady]);
+
+  return (
+    <video
+      ref={videoRef}
+      autoPlay muted loop playsInline preload="auto"
+      style={{
+        position: 'absolute', inset: 0, width: '100%', height: '100%',
+        objectFit: 'cover', opacity: 0, transition: 'opacity 0.8s ease', zIndex: 1,
+      }}
+    />
+  );
+}
+
 // ── Fond featured : orbe de chargement 0→100% puis vidéo Mux en fondu ──
 function FeaturedBackground({ project, tall = false }: { project: SanityProject; tall?: boolean }) {
   const w = tall ? 800 : 1200;
@@ -137,25 +198,19 @@ function FeaturedBackground({ project, tall = false }: { project: SanityProject;
         </div>
       )}
 
-      {/* Vidéo Mux — opacity 0, fade in à onCanPlay */}
-      {project.previewVideo && (
-        <video autoPlay muted loop playsInline preload="auto"
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0, transition: 'opacity 0.8s ease', zIndex: 1 }}
-          onCanPlay={(e) => {
-            const vid = e.target as HTMLVideoElement;
-            doneRef.current = true;
-            if (animRef.current) cancelAnimationFrame(animRef.current);
-            if (circleRef.current) circleRef.current.style.strokeDashoffset = '0';
-            if (pctRef.current)    pctRef.current.textContent = '100%';
-            setTimeout(() => {
-              if (orbRef.current) orbRef.current.style.opacity = '0';
-              vid.style.opacity = '1';
-            }, 350);
-          }}
-        >
-          <source src={`https://stream.mux.com/${project.previewVideo}.m3u8`} type="application/x-mpegURL" />
-        </video>
-      )}
+      {/* Vidéo Mux — opacity 0, fade in quand prête (hls.js pour Chrome/Firefox) */}
+      {project.previewVideo && <HlsVideo
+        src={`https://stream.mux.com/${project.previewVideo}.m3u8`}
+        onReady={() => {
+          doneRef.current = true;
+          if (animRef.current) cancelAnimationFrame(animRef.current);
+          if (circleRef.current) circleRef.current.style.strokeDashoffset = '0';
+          if (pctRef.current) pctRef.current.textContent = '100%';
+          setTimeout(() => {
+            if (orbRef.current) orbRef.current.style.opacity = '0';
+          }, 350);
+        }}
+      />}
     </div>
   );
 }

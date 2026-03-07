@@ -58,6 +58,7 @@ export function Header() {
             {[
               { path: '/', label: 'Work' },
               { path: '/solutions', label: 'Solutions' },
+              { path: '/instagram', label: 'Instagram' },
               { path: '/contact', label: 'Contact' },
             ].map(({ path, label }) => (
               <Link

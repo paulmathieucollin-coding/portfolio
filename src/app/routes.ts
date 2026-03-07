@@ -30,6 +30,11 @@ export const router = createBrowserRouter([
     errorElement: createElement(ErrorPage),
   },
   {
+    path: '/instagram',
+    lazy: () => import('./pages/Instagram').then((m) => ({ Component: m.Instagram })),
+    errorElement: createElement(ErrorPage),
+  },
+  {
     path: '/mentions-legales',
     lazy: () => import('./pages/Legal').then((m) => ({ Component: m.Legal })),
     errorElement: createElement(ErrorPage),
