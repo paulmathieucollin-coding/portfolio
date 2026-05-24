@@ -1,0 +1,19 @@
+@import "./fonts.css";
+@import "./tailwind.css";
+@import "./theme.css";
+
+html {
+  scroll-behavior: auto; /* Lenis gère le smooth scroll */
+  cursor: none;
+}
+
+body {
+  overflow-x: hidden;
+  cursor: none;
+}
+
+*, *::before, *::after {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  cursor: none;
+}

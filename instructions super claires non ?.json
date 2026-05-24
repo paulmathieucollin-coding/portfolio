@@ -1,0 +1,199 @@
+{
+  "projet": {
+    "nom": "Portfolio V2 — Paul Mathieu Collin",
+    "description": "Portfolio personnel de photographe / vidéaste / directeur artistique. Site minimaliste, éditorial, DA noir & blanc.",
+    "url_live": "https://paulmathieucollin.fr",
+    "url_vercel": "https://portfolio-silk-psi-83.vercel.app",
+    "github": "https://github.com/paulmathieucollin-coding/portfolio",
+    "dossier_local": "/Users/pmc/Desktop/_WEB_PROJETS/Portfolio_V2"
+  },
+
+  "stack": {
+    "framework": "React 18 + TypeScript",
+    "build": "Vite 6",
+    "styles": "TailwindCSS v4",
+    "animations": "GSAP + ScrollTrigger + Framer Motion (motion)",
+    "scroll": "Lenis (smooth scroll via @studio-freight/lenis)",
+    "cms": "Sanity CMS (projectId: nt5y9ye7, dataset: production)",
+    "video": "Mux (hébergement + streaming) via @mux/mux-player-react",
+    "routing": "React Router v7 (SPA, vercel.json rewrites)",
+    "typo": "Geist Sans (variable) + Geist Mono",
+    "icons": "developer-icons (npm, installé mais pas utilisé dans le header final)",
+    "hebergement": "Vercel (auto-deploy sur push main)",
+    "dns": "OVH → Vercel (A record 216.198.79.1, CNAME www → vercel)"
+  },
+
+  "direction_artistique": {
+    "theme": "Dark — fond #0a0a0a, tout noir & blanc",
+    "couleurs": {
+      "fond": "#0a0a0a",
+      "texte_principal": "#ffffff",
+      "texte_secondaire": "rgba(255,255,255,0.5)",
+      "texte_muted": "rgba(255,255,255,0.35)",
+      "borders": "rgba(255,255,255,0.08-0.1)",
+      "cards": "#141414",
+      "accent": "#ffffff (les CTA sont blancs sur noir)"
+    },
+    "inspiration": "Juan Mora (juanmora.me) — hero fullscreen, typo massive, nav centrée en pill, socials à droite",
+    "regles": [
+      "Pas de couleur sauf les vidéos et photos de projets",
+      "Images en grayscale par défaut, couleur au hover",
+      "Angles carrés (border-radius: 0px sauf nav pills)",
+      "Typographie Geist — pas d'emojis, pas de déco superflue",
+      "Sons subtils au hover (Web Audio API, sine wave 3200→1800Hz)",
+      "Fade-in sur chaque page (GSAP, opacity 0→1 + y 12→0)"
+    ]
+  },
+
+  "structure_fichiers": {
+    "src/app/App.tsx": "Point d'entrée React — CustomCursor + RouterProvider",
+    "src/app/routes.ts": "Routes: / (Home), /contact (Contact), /project/:slug (ProjectDetail)",
+    "src/app/pages/Home.tsx": "Page d'accueil — Header + Hero + ProjectGrid + Footer",
+    "src/app/pages/Contact.tsx": "Page contact — CTA Calendly + email + socials",
+    "src/app/pages/ProjectDetail.tsx": "Page projet — hero image + meta + vidéos Mux + galerie",
+    "src/app/components/Header.tsx": "Nav fixe transparente — logo gauche, pills centrées (About/Work), socials droite (Email/in/x/Be)",
+    "src/app/components/Hero.tsx": "Hero fullscreen — nom 'Paul' / 'Collin' en typo massive, preview window flottante au centre",
+    "src/app/components/ProjectGrid.tsx": "Grille de projets Sanity — filtres par catégorie, images grayscale→couleur hover",
+    "src/app/components/VideoPlayer.tsx": "Player vidéo multi-source: Mux (playbackId) / YouTube / Vimeo / MP4 + mutex (une seule vidéo joue à la fois)",
+    "src/app/components/GlassButton.tsx": "Bouton — variantes primary (blanc plein) et ghost (border transparent) + son hover",
+    "src/app/components/Footer.tsx": "Pied de page — nom + socials + contact + copyright",
+    "src/app/components/CustomCursor.tsx": "Curseur personnalisé — point blanc 8px, mix-blend-mode difference",
+    "src/app/components/SmoothScroll.tsx": "Wrapper Lenis pour scroll fluide",
+    "src/app/components/PageTransition.tsx": "Fade-in GSAP au montage de chaque page",
+    "src/app/hooks/useHoverSound.ts": "Son synthétique au hover via Web Audio API (sine wave, 80ms)",
+    "src/lib/sanity.ts": "Client Sanity (projectId hardcodé: nt5y9ye7)",
+    "src/lib/queries.ts": "Requêtes GROQ — liste projets + projet par slug",
+    "src/types/project.ts": "Types TS — SanityProject, SanityVideo (url? + muxPlaybackId?), SanityImage",
+    "src/styles/theme.css": "Variables CSS — design system dark (fond #0a0a0a, texte blanc, pas de couleur)",
+    "src/styles/index.css": "CSS global — cursor:none, font-smoothing",
+    "src/styles/fonts.css": "@font-face Geist depuis node_modules",
+    "studio/": "Sanity Studio — schémas, config"
+  },
+
+  "sanity_cms": {
+    "project_id": "nt5y9ye7",
+    "dataset": "production",
+    "url_manage": "https://www.sanity.io/manage/personal/project/nt5y9ye7",
+    "studio_local": "cd studio && npm run dev → http://localhost:3333",
+    "schema_projet": {
+      "title": "string (requis)",
+      "slug": "slug (depuis title)",
+      "category": "Photo | Vidéo | Direction",
+      "year": "number",
+      "mainImage": "image (hotspot)",
+      "gallery": "image[]",
+      "videos": "array d'objets { title?, muxPlaybackId?, url?, aspectRatio? }",
+      "description": "text",
+      "challenge": "text (section Enjeu)",
+      "approach": "text (section Approche)"
+    },
+    "cors_autorises": [
+      "http://localhost:3333",
+      "http://localhost:5173",
+      "https://portfolio-silk-psi-83.vercel.app",
+      "https://paulmathieucollin.fr",
+      "https://www.paulmathieucollin.fr"
+    ]
+  },
+
+  "mux": {
+    "dashboard": "https://dashboard.mux.com",
+    "organisation": "PMC",
+    "environnement": "portfolio-pmc",
+    "assets_actuels": [
+      { "titre": "INOUI_JO__ V4", "duree": "0:20", "status": "Ready" },
+      { "titre": "BRIK_16_9", "duree": "0:25", "status": "Ready" },
+      { "titre": "4_Saisons_V5", "duree": "0:23", "status": "Ready" },
+      { "titre": "EXPORT_1", "duree": "2:56", "status": "Ready" },
+      { "titre": "EXPORT_3", "duree": "2:39", "status": "Ready" },
+      { "titre": "EXPORT_2", "duree": "1:25", "status": "Ready" }
+    ],
+    "integration": "Les vidéos sont lues via @mux/mux-player-react avec le playbackId stocké dans Sanity"
+  },
+
+  "projets_sanity_actuels": [
+    {
+      "titre": "Dimanche",
+      "slug": "dimanche",
+      "categorie": "Direction",
+      "annee": 2025,
+      "videos": 3,
+      "playback_ids": ["3n2RHKDlhMvi9rttLq005XXT0001TjwGmNFeb2ft015j3e8", "OoZrsAhmxCogxtLRezTcCAPuqJR02kXBg4wz731DMqCo", "FX7wrRM87KWumTL8OMMucHgp00Q9RAbdmT99hMuTQmFo"]
+    },
+    {
+      "titre": "Inoui Editions",
+      "slug": "inoui-editions",
+      "categorie": "Direction",
+      "annee": 2025,
+      "videos": 3,
+      "playback_ids": ["Hq4axG01GFvsXEA4NLBpJow3lLWkYREvS1d00Q2vLNbaQ", "f3tamcjU1O01g4FraIsr02j9RmUjvlzUw6w3mSkas00vwU", "IhvdBxfsyoR02tDVCchZSj8f7zhzuTCrXSuf7asj5l9c"]
+    },
+    {
+      "titre": "Inoui Editions",
+      "slug": "inoui-editions-2",
+      "categorie": "Vidéo",
+      "annee": 2024,
+      "videos": 1,
+      "playback_ids": ["oREcvAxErHpU00TMJYXY01UXGegAdWXc025Oek7kAX5I68"]
+    }
+  ],
+
+  "commandes_dev": {
+    "site_local": "cd ~/Desktop/_WEB_PROJETS/Portfolio_V2 && npm run dev → http://localhost:5173",
+    "studio_local": "cd studio && npm run dev → http://localhost:3333",
+    "build": "npm run build",
+    "deploy": "git add . && git commit -m 'msg' && git push origin main → Vercel auto-rebuild"
+  },
+
+  "etat_git": {
+    "status": "ATTENTION: le repo local n'a AUCUN commit. Il faut faire un git add . && git commit -m 'Initial commit' avant de pouvoir push.",
+    "remote": "Non configuré. Il faut: git remote add origin git@github.com:paulmathieucollin-coding/portfolio.git",
+    "ssh": "Clé ed25519 configurée sur ce Mac pour paulmathieucollin-coding"
+  },
+
+  "env": {
+    "fichier": ".env (gitignored)",
+    "variables": {
+      "VITE_SANITY_PROJECT_ID": "nt5y9ye7",
+      "VITE_SANITY_DATASET": "production"
+    },
+    "note": "Aussi hardcodées dans src/lib/sanity.ts, le .env n'est pas critique"
+  },
+
+  "vercel": {
+    "output_directory": "dist",
+    "rewrites": "/(.*) → / (SPA React Router)",
+    "env_vars": "VITE_SANITY_PROJECT_ID + VITE_SANITY_DATASET dans le dashboard Vercel"
+  },
+
+  "features_implementees": [
+    "Hero fullscreen avec nom en typo massive (style Juan Mora)",
+    "Preview window flottante au centre du hero",
+    "Header transparent — nav centrée en pill glassmorphism + socials",
+    "Design system dark complet (#0a0a0a, blanc, pas de couleur)",
+    "Grille de projets avec filtres (Tous/Photo/Vidéo/Direction)",
+    "Images grayscale → couleur au hover",
+    "Player vidéo Mux avec @mux/mux-player-react",
+    "Mutex vidéo — une seule vidéo joue à la fois",
+    "Support multi-source vidéo (Mux/YouTube/Vimeo/MP4)",
+    "Page projet détaillée (hero parallax, meta, enjeu/approche, vidéos, galerie)",
+    "Page contact avec CTA Calendly",
+    "Curseur personnalisé (point blanc, mix-blend-mode difference)",
+    "Smooth scroll via Lenis",
+    "Animations GSAP (reveal au scroll, stagger, parallax)",
+    "Sons hover synthétiques (Web Audio API)",
+    "Fade-in sur chaque page (PageTransition)",
+    "Footer structuré avec socials + contact"
+  ],
+
+  "todo_connu": [
+    "Faire le premier git commit + configurer le remote GitHub",
+    "Mettre les vrais liens socials (Instagram, LinkedIn, Behance, X)",
+    "Mettre le vrai lien Calendly dans Contact.tsx",
+    "Ajouter plus de projets dans Sanity avec leurs vidéos Mux",
+    "Optimiser le bundle (code-split @mux/mux-player-react en lazy import)",
+    "La preview window dans le Hero est un placeholder — y mettre une vraie vidéo/image",
+    "Tester le responsive mobile en profondeur",
+    "Mettre à jour le PROJET.md avec la nouvelle DA"
+  ]
+}
