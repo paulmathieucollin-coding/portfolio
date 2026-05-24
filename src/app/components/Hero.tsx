@@ -1,69 +1,59 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 
+const HERO_PLAYBACK_ID = '3n2RHKDlhMvi9rttLq005XXT0001TjwGmNFeb2ft015j3e8';
+
 export function Hero() {
   const heroRef = useRef<HTMLElement>(null);
-  const nameLeftRef = useRef<HTMLDivElement>(null);
-  const nameRightRef = useRef<HTMLDivElement>(null);
-  const subtitleLeftRef = useRef<HTMLDivElement>(null);
-  const subtitleRightRef = useRef<HTMLDivElement>(null);
-  const previewRef = useRef<HTMLDivElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const line1Ref = useRef<HTMLDivElement>(null);
+  const line2Ref = useRef<HTMLDivElement>(null);
+  const subtitleRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    async function loadHLS() {
+      const hlsUrl = `https://stream.mux.com/${HERO_PLAYBACK_ID}.m3u8`;
+
+      if (video!.canPlayType('application/vnd.apple.mpegurl')) {
+        video!.src = hlsUrl;
+        video!.play().catch(() => {});
+      } else {
+        try {
+          const { default: Hls } = await import('hls.js');
+          if (Hls.isSupported()) {
+            const hls = new Hls({ startLevel: -1, capLevelToPlayerSize: true });
+            hls.loadSource(hlsUrl);
+            hls.attachMedia(video!);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+              video!.play().catch(() => {});
+            });
+          }
+        } catch {
+          video!.src = `https://stream.mux.com/${HERO_PLAYBACK_ID}/high.mp4`;
+          video!.play().catch(() => {});
+        }
+      }
+    }
+
+    loadHLS();
+  }, []);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: 'power4.out' } });
 
-      tl.from(overlayRef.current, {
-        opacity: 0,
-        duration: 1.5,
-      })
-        .from(
-          nameLeftRef.current,
-          {
-            yPercent: 100,
-            opacity: 0,
-            duration: 1.2,
-          },
-          0.3,
-        )
-        .from(
-          nameRightRef.current,
-          {
-            yPercent: 100,
-            opacity: 0,
-            duration: 1.2,
-          },
-          0.5,
-        )
-        .from(
-          subtitleLeftRef.current,
-          {
-            opacity: 0,
-            y: 20,
-            duration: 0.9,
-          },
-          0.8,
-        )
-        .from(
-          subtitleRightRef.current,
-          {
-            opacity: 0,
-            y: 20,
-            duration: 0.9,
-          },
-          0.9,
-        )
-        .from(
-          previewRef.current,
-          {
-            opacity: 0,
-            y: 40,
-            scale: 0.95,
-            duration: 1,
-          },
-          0.6,
-        );
+      if (line1Ref.current) {
+        tl.from(line1Ref.current, { yPercent: 120, duration: 1.3 }, 0.4);
+      }
+      if (line2Ref.current) {
+        tl.from(line2Ref.current, { yPercent: 120, duration: 1.3 }, 0.6);
+      }
+      if (subtitleRef.current) {
+        tl.from(subtitleRef.current, { opacity: 0, y: 20, duration: 0.9 }, 1.0);
+      }
     }, heroRef);
 
     return () => ctx.revert();
@@ -73,117 +63,72 @@ export function Hero() {
     <section
       ref={heroRef}
       className="relative h-screen w-full overflow-hidden flex items-end"
-      style={{ backgroundColor: '#0a0a0a' }}
     >
-      {/* Background image overlay */}
+      {/* HLS video background */}
+      <video
+        ref={videoRef}
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover"
+        poster={`https://image.mux.com/${HERO_PLAYBACK_ID}/thumbnail.jpg?time=2&width=1920`}
+      />
+
+      {/* Dark overlay */}
       <div
-        ref={overlayRef}
         className="absolute inset-0"
         style={{
-          backgroundImage: 'linear-gradient(to bottom, rgba(10,10,10,0.3) 0%, rgba(10,10,10,0.6) 100%)',
+          background: 'linear-gradient(to bottom, rgba(10,10,10,0.2) 0%, rgba(10,10,10,0.75) 100%)',
         }}
       />
 
-      {/* Center preview window */}
-      <div
-        ref={previewRef}
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[45%] z-10"
-        style={{
-          width: 'clamp(280px, 30vw, 480px)',
-          aspectRatio: '16/10',
-          backgroundColor: '#111',
-          borderRadius: '8px',
-          border: '1px solid rgba(255,255,255,0.08)',
-          overflow: 'hidden',
-          boxShadow: '0 40px 80px rgba(0,0,0,0.6)',
-        }}
-      >
-        <div
-          className="w-full h-full flex items-center justify-center"
-          style={{
-            background: 'linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%)',
-          }}
-        >
-          <span
-            style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: '0.65rem',
-              color: 'rgba(255,255,255,0.25)',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-            }}
-          >
-            Latest project preview
-          </span>
-        </div>
-      </div>
-
-      {/* Bottom content — name spanning full width */}
-      <div className="relative z-20 w-full px-6 md:px-12 pb-8 md:pb-12">
+      {/* Bottom content */}
+      <div className="relative z-20 w-full px-6 md:px-12 pb-10 md:pb-14">
         <div className="max-w-[1440px] mx-auto">
-          {/* Subtitle left */}
-          <div ref={subtitleLeftRef} className="mb-4">
+          <div ref={subtitleRef} className="mb-5">
             <p
               style={{
-                fontFamily: 'var(--font-family)',
-                fontSize: 'clamp(1rem, 1.5vw, 1.25rem)',
+                fontSize: 'clamp(0.85rem, 1.2vw, 1.1rem)',
                 fontWeight: 400,
-                color: 'rgba(255,255,255,0.7)',
-                lineHeight: 1.4,
+                color: 'rgba(255,255,255,0.6)',
+                letterSpacing: '0.05em',
+                lineHeight: 1.5,
               }}
             >
-              Photographe & Directeur
-              <br />
-              Artistique
+              Photographe & Directeur Artistique
             </p>
           </div>
 
-          {/* Giant name */}
-          <div className="flex items-end justify-between">
+          <div>
             <div style={{ overflow: 'hidden' }}>
-              <div ref={nameLeftRef}>
+              <div ref={line1Ref}>
                 <h1
                   style={{
-                    fontSize: 'clamp(4rem, 14vw, 16rem)',
+                    fontSize: 'clamp(3.5rem, 12vw, 14rem)',
                     fontWeight: 600,
-                    lineHeight: 0.85,
+                    lineHeight: 0.9,
                     letterSpacing: '-0.04em',
-                    color: 'rgba(255,255,255,0.85)',
+                    color: '#ffffff',
                   }}
                 >
                   Paul
                 </h1>
               </div>
             </div>
-
-            <div className="text-right">
-              <div style={{ overflow: 'hidden' }}>
-                <div ref={nameRightRef}>
-                  <h1
-                    style={{
-                      fontSize: 'clamp(4rem, 14vw, 16rem)',
-                      fontWeight: 600,
-                      lineHeight: 0.85,
-                      letterSpacing: '-0.04em',
-                      color: 'rgba(255,255,255,0.85)',
-                    }}
-                  >
-                    Collin
-                  </h1>
-                </div>
-              </div>
-              <div ref={subtitleRightRef} className="mt-3">
-                <p
+            <div style={{ overflow: 'hidden' }}>
+              <div ref={line2Ref}>
+                <h1
                   style={{
-                    fontFamily: 'var(--font-family)',
-                    fontSize: 'clamp(1rem, 1.5vw, 1.25rem)',
-                    fontWeight: 400,
-                    color: 'rgba(255,255,255,0.7)',
-                    lineHeight: 1.4,
+                    fontSize: 'clamp(3.5rem, 12vw, 14rem)',
+                    fontWeight: 600,
+                    lineHeight: 0.9,
+                    letterSpacing: '-0.04em',
+                    color: '#ffffff',
                   }}
                 >
-                  Freelance Visual Director
-                </p>
+                  Mathieu Collin
+                </h1>
               </div>
             </div>
           </div>

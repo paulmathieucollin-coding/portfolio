@@ -6,11 +6,23 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!ref.current) return;
-    gsap.fromTo(
-      ref.current,
-      { opacity: 0, y: 12 },
-      { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' },
-    );
+
+    const elements = ref.current.querySelectorAll('section, header, footer');
+
+    elements.forEach((el) => {
+      const wrapper = el as HTMLElement;
+      wrapper.style.clipPath = 'inset(100% 0 0 0)';
+      wrapper.style.opacity = '0';
+    });
+
+    gsap.to(elements, {
+      clipPath: 'inset(0% 0 0 0)',
+      opacity: 1,
+      duration: 0.9,
+      stagger: 0.12,
+      ease: 'power4.out',
+      delay: 0.1,
+    });
   }, []);
 
   return <div ref={ref}>{children}</div>;

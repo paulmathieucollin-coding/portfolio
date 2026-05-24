@@ -1,13 +1,15 @@
 import { useEffect, useRef } from 'react';
 
 const FADE_DURATION = 2000;
-const RESUME_DELAY = 5000;
+const RESUME_DELAY = 1500;
 const TARGET_VOLUME = 0.15;
 
 let ambientAudio: HTMLAudioElement | null = null;
 let fadeInterval: ReturnType<typeof setInterval> | null = null;
 let resumeTimeout: ReturnType<typeof setTimeout> | null = null;
 let isVideoPlaying = false;
+let isMuted = false;
+let muteListeners: Array<(muted: boolean) => void> = [];
 
 function getAmbient(): HTMLAudioElement {
   if (!ambientAudio) {
@@ -26,6 +28,7 @@ function clearFade() {
 }
 
 function fadeTo(target: number, duration: number) {
+  if (isMuted) return;
   clearFade();
   const audio = getAmbient();
   const start = audio.volume;
@@ -61,11 +64,35 @@ export function notifyVideoStop() {
   isVideoPlaying = false;
   if (resumeTimeout) clearTimeout(resumeTimeout);
   resumeTimeout = setTimeout(() => {
-    if (!isVideoPlaying && ambientAudio) {
+    if (!isVideoPlaying && ambientAudio && !isMuted) {
       ambientAudio.play();
       fadeTo(TARGET_VOLUME, FADE_DURATION);
     }
   }, RESUME_DELAY);
+}
+
+export function toggleMute(): boolean {
+  isMuted = !isMuted;
+  const audio = getAmbient();
+  if (isMuted) {
+    clearFade();
+    audio.volume = 0;
+    audio.pause();
+  } else if (!isVideoPlaying) {
+    audio.play().catch(() => {});
+    fadeTo(TARGET_VOLUME, 600);
+  }
+  muteListeners.forEach((fn) => fn(isMuted));
+  return isMuted;
+}
+
+export function getIsMuted() {
+  return isMuted;
+}
+
+export function onMuteChange(fn: (muted: boolean) => void) {
+  muteListeners.push(fn);
+  return () => { muteListeners = muteListeners.filter((l) => l !== fn); };
 }
 
 export function useAmbientAudio() {
@@ -77,6 +104,7 @@ export function useAmbientAudio() {
     const startAmbient = () => {
       if (started.current) return;
       started.current = true;
+      if (isMuted) return;
       const audio = getAmbient();
       audio.volume = 0;
       audio.play().then(() => {

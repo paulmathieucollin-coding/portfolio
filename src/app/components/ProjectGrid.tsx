@@ -1,4 +1,3 @@
-import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useNavigate } from 'react-router';
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
@@ -10,17 +9,15 @@ import { playHoverSound } from '../hooks/useHoverSound';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const CATEGORIES = ['Tous', 'Photo', 'Vidéo', 'Direction'];
-
 export function ProjectGrid() {
   const navigate = useNavigate();
   const sectionRef = useRef<HTMLElement>(null);
-  const headingRef = useRef<HTMLDivElement>(null);
-  const filtersRef = useRef<HTMLDivElement>(null);
-  const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
-  const [activeFilter, setActiveFilter] = useState('Tous');
+  const listRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const previewImgRef = useRef<HTMLImageElement>(null);
   const [projects, setProjects] = useState<SanityProject[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   useEffect(() => {
     client.fetch<SanityProject[]>(projectsQuery)
@@ -28,208 +25,179 @@ export function ProjectGrid() {
         setProjects(data ?? []);
         setLoading(false);
       })
-      .catch((err) => {
-        console.error('Sanity fetch error:', err);
-        setLoading(false);
-      });
+      .catch(() => setLoading(false));
   }, []);
 
-  const filtered =
-    activeFilter === 'Tous' ? projects : projects.filter((p) => p.category === activeFilter);
-
   useEffect(() => {
-    if (loading) return;
-
+    if (loading || !listRef.current) return;
+    const items = listRef.current.querySelectorAll('.project-row');
     const ctx = gsap.context(() => {
-      gsap.from(headingRef.current, {
+      gsap.from(items, {
         opacity: 0,
         y: 30,
-        duration: 0.9,
+        duration: 0.7,
+        stagger: 0.08,
         ease: 'power3.out',
         scrollTrigger: {
-          trigger: headingRef.current,
+          trigger: listRef.current,
           start: 'top 85%',
         },
       });
-
-      gsap.from(filtersRef.current?.children ? Array.from(filtersRef.current.children) : [], {
-        opacity: 0,
-        y: 16,
-        duration: 0.6,
-        stagger: 0.06,
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: filtersRef.current,
-          start: 'top 88%',
-        },
-      });
-
-      cardsRef.current.forEach((card, i) => {
-        if (!card) return;
-        gsap.from(card, {
-          opacity: 0,
-          y: 40,
-          duration: 0.8,
-          ease: 'power3.out',
-          delay: i * 0.07,
-          scrollTrigger: {
-            trigger: card,
-            start: 'top 90%',
-          },
-        });
-      });
     }, sectionRef);
-
     return () => ctx.revert();
   }, [loading]);
 
-  useEffect(() => {
-    cardsRef.current.forEach((card, i) => {
-      if (!card) return;
-      gsap.fromTo(
-        card,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out', delay: i * 0.05 },
-      );
-    });
-  }, [activeFilter]);
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!previewRef.current) return;
+    previewRef.current.style.left = `${e.clientX - 100}px`;
+    previewRef.current.style.top = `${e.clientY - 75}px`;
+  };
+
+  const handleEnter = (idx: number) => {
+    setHoveredIdx(idx);
+    playHoverSound();
+    if (previewRef.current) {
+      gsap.to(previewRef.current, { opacity: 1, scale: 1, duration: 0.25, ease: 'power2.out' });
+    }
+  };
+
+  const handleLeave = () => {
+    setHoveredIdx(null);
+    if (previewRef.current) {
+      gsap.to(previewRef.current, { opacity: 0, scale: 0.92, duration: 0.2, ease: 'power2.in' });
+    }
+  };
+
+  const hoveredProject = hoveredIdx !== null ? projects[hoveredIdx] : null;
 
   return (
-    <section id="projects" ref={sectionRef} className="py-20 md:py-32 px-6 md:px-12">
-      <div className="max-w-[1440px] mx-auto">
-        {/* Section header */}
-        <div ref={headingRef} className="mb-10 md:mb-14 flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <h2
-            className="tracking-tight text-white"
-            style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', fontWeight: 700, letterSpacing: '-0.02em' }}
-          >
-            Selected Work
-          </h2>
-          <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)' }}>
-            {loading ? '—' : `${filtered.length} projet${filtered.length > 1 ? 's' : ''}`}
-          </p>
-        </div>
+    <section
+      ref={sectionRef}
+      id="projects"
+      className="relative min-h-screen w-full flex flex-col justify-center"
+      style={{ backgroundColor: '#0a0a0a' }}
+    >
+      <div className="max-w-[1440px] mx-auto w-full px-6 md:px-12 py-20 md:py-32">
+        {/* Section title */}
+        <h2
+          className="mb-16 md:mb-24"
+          style={{
+            fontSize: 'clamp(0.7rem, 0.9vw, 0.8rem)',
+            fontWeight: 500,
+            letterSpacing: '0.15em',
+            color: 'rgba(255,255,255,0.35)',
+            textTransform: 'uppercase',
+          }}
+        >
+          Selected Work
+        </h2>
 
-        {/* Filters */}
-        <div ref={filtersRef} className="flex gap-2 mb-12 flex-wrap">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setActiveFilter(cat)}
-              className="transition-all duration-300"
-              style={{
-                padding: '0.4rem 1.1rem',
-                fontSize: '0.78rem',
-                fontWeight: 500,
-                letterSpacing: '0.04em',
-                borderRadius: '0px',
-                border: '1px solid',
-                borderColor: activeFilter === cat ? '#ffffff' : 'rgba(255,255,255,0.15)',
-                backgroundColor: activeFilter === cat ? '#ffffff' : 'transparent',
-                color: activeFilter === cat ? '#0a0a0a' : 'rgba(255,255,255,0.5)',
-                cursor: 'pointer',
-              }}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
-        {/* Loading skeleton */}
         {loading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="mb-4" style={{ borderRadius: '0px', aspectRatio: '4/5', backgroundColor: '#1a1a1a' }} />
-                <div className="flex justify-between">
-                  <div className="h-4 w-32 rounded" style={{ backgroundColor: '#1a1a1a' }} />
-                  <div className="h-4 w-20 rounded" style={{ backgroundColor: '#1a1a1a' }} />
+          <div className="space-y-8">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="animate-pulse h-16" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }} />
+            ))}
+          </div>
+        )}
+
+        {!loading && (
+          <div ref={listRef}>
+            {projects.map((project, i) => (
+              <div
+                key={project._id}
+                className="project-row cursor-pointer"
+                style={{
+                  borderTop: i === 0 ? '1px solid rgba(255,255,255,0.08)' : 'none',
+                  borderBottom: '1px solid rgba(255,255,255,0.08)',
+                }}
+                onClick={() => navigate(`/project/${project.slug.current}`)}
+                onMouseEnter={() => handleEnter(i)}
+                onMouseLeave={handleLeave}
+                onMouseMove={handleMouseMove}
+              >
+                <div
+                  className="flex items-center justify-between py-6 md:py-8 transition-all duration-300"
+                  style={{ paddingLeft: hoveredIdx === i ? '1.5rem' : '0' }}
+                >
+                  {/* Left: index + title */}
+                  <div className="flex items-baseline gap-6 md:gap-10">
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.75rem',
+                        color: 'rgba(255,255,255,0.2)',
+                        minWidth: '2rem',
+                      }}
+                    >
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <h3
+                      className="transition-colors duration-300"
+                      style={{
+                        fontSize: 'clamp(1.5rem, 3.5vw, 3rem)',
+                        fontWeight: 600,
+                        letterSpacing: '-0.02em',
+                        color: hoveredIdx === i ? '#ffffff' : 'rgba(255,255,255,0.5)',
+                      }}
+                    >
+                      {project.title}
+                    </h3>
+                  </div>
+
+                  {/* Right: category + year */}
+                  <div className="hidden md:flex items-center gap-8">
+                    <span
+                      style={{
+                        fontSize: '0.8rem',
+                        color: 'rgba(255,255,255,0.3)',
+                        letterSpacing: '0.04em',
+                      }}
+                    >
+                      {project.category}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.8rem',
+                        color: 'rgba(255,255,255,0.2)',
+                      }}
+                    >
+                      {project.year}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         )}
+      </div>
 
-        {/* Grid */}
-        {!loading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {filtered.map((project, i) => (
-              <div
-                key={project._id}
-                ref={(el) => { cardsRef.current[i] = el; }}
-                className="group cursor-pointer"
-                onMouseEnter={playHoverSound}
-                onClick={() => navigate(`/project/${project.slug.current}`)}
-              >
-                {/* Image container */}
-                <div
-                  className="relative overflow-hidden mb-4"
-                  style={{ borderRadius: '0px', aspectRatio: '4/5', backgroundColor: '#141414' }}
-                >
-                  <ImageWithFallback
-                    src={urlFor(project.mainImage).width(800).auto('format').url()}
-                    alt={project.title}
-                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
-                    style={{ filter: 'grayscale(100%)', transition: 'transform 0.7s ease-out, filter 0.5s ease' }}
-                  />
-
-                  {/* Hover overlay */}
-                  <div
-                    className="absolute inset-0 flex flex-col justify-end p-5 transition-all duration-500"
-                    style={{
-                      background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 55%)',
-                      opacity: 0,
-                    }}
-                    ref={(el) => {
-                      if (el) {
-                        const parent = el.closest('.group');
-                        const img = parent?.querySelector('img');
-                        if (parent) {
-                          parent.addEventListener('mouseenter', () => {
-                            gsap.to(el, { opacity: 1, duration: 0.35, ease: 'power2.out' });
-                            if (img) gsap.to(img, { filter: 'grayscale(0%)', duration: 0.5 });
-                          });
-                          parent.addEventListener('mouseleave', () => {
-                            gsap.to(el, { opacity: 0, duration: 0.35, ease: 'power2.out' });
-                            if (img) gsap.to(img, { filter: 'grayscale(100%)', duration: 0.5 });
-                          });
-                        }
-                      }
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: '0.75rem',
-                        letterSpacing: '0.12em',
-                        fontWeight: 500,
-                        color: '#ffffff',
-                      }}
-                    >
-                      VIEW PROJECT →
-                    </span>
-                  </div>
-                </div>
-
-                {/* Meta */}
-                <div className="flex justify-between items-baseline">
-                  <h3
-                    className="tracking-tight transition-colors duration-300"
-                    style={{
-                      fontSize: '1.0625rem',
-                      fontWeight: 600,
-                      color: 'rgba(255,255,255,0.9)',
-                    }}
-                  >
-                    {project.title}
-                  </h3>
-                  <div className="flex gap-3" style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)' }}>
-                    <span>{project.category}</span>
-                    <span>{project.year}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* Pixelated preview that follows cursor */}
+      <div
+        ref={previewRef}
+        className="pointer-events-none fixed z-50"
+        style={{
+          opacity: 0,
+          transform: 'scale(0.92)',
+          width: '200px',
+          aspectRatio: '4/3',
+          overflow: 'hidden',
+          imageRendering: 'pixelated',
+        }}
+      >
+        {hoveredProject?.mainImage && (
+          <img
+            ref={previewImgRef}
+            src={urlFor(hoveredProject.mainImage).width(40).height(30).auto('format').url()}
+            alt={hoveredProject.title}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              imageRendering: 'pixelated',
+              filter: 'contrast(1.1)',
+            }}
+          />
         )}
       </div>
     </section>
